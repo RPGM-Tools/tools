@@ -1,0 +1,55 @@
+{
+	"$schema": "https://github.com/SchemaStore/schemastore/raw/refs/heads/master/src/schemas/json/package.json",
+	"name": "@rpgm/tools",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./shared/src/index.ts",
+			"types": "./shared/types/index.d.ts"
+		},
+		"./forge": "./tools/forge/src/index.ts",
+		"./vault": "./tools/vault/src/index.ts"
+	},
+	"packageManager": "pnpm@10.13.1",
+	"types": "./shared/types/index.d.ts",
+	"publishConfig": {
+		"exports": {
+			"types": "./shared/types/index.d.ts",
+			"./forge": {
+				"types": "./tools/forge/src/index.d.ts",
+				"import": "./tools/forge/src/index.js"
+			},
+			"./vault": {
+				"types": "./tools/vault/src/index.d.ts",
+				"import": "./tools/vault/src/index.js"
+			}
+		}
+	},
+	"author": "dallenb4",
+	"license": "MIT",
+	"devDependencies": {
+		"@eslint/js": "^9.33.0",
+		"@stylistic/eslint-plugin": "^5.2.3",
+		"eslint": "^9.33.0",
+		"eslint-plugin-jsdoc": "^54.1.0",
+		"eslint-plugin-simple-import-sort": "^12.1.1",
+		"typescript": "^5.9.2",
+		"typescript-eslint": "^8.39.1",
+		"vitest": "^3.2.4",
+		"neverthrow": "^8.2.0",
+		"openai": "^5.12.2"
+	},
+	"dependencies": {},
+	"peerDependencies": {
+		"neverthrow": "^8.2.0",
+		"openai": "^5.12.2"
+	},
+	"peerDependenciesMeta": {
+		"neverthrow": {
+			"optional": false
+		},
+		"openai": {
+			"optional": false
+		}
+	}
+}
