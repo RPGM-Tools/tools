@@ -1,28 +1,80 @@
-import type OpenAI from 'openai';
+import { RPGMLogger } from '#/logger';
+import { RpgmTools, type ModuleOptions } from '#/index';
 
-import { RpgmModule } from '../../../shared/src/module';
-
-import { generateNames } from './names';
 import { ForgeQueue } from './queue';
+import { ResultAsync } from 'neverthrow';
+import { RpgmModule } from '../../../shared/src/module';
+import { generateDescriptions } from './descriptions';
+import { generateHomebrew } from './homebrew';
+import { generateNames } from './names';
+import { generateText } from 'ai';
+export { default as HomebrewSchemas } from './data/schemas.json';
 
-export { listModels } from './names';
+export type * from './descriptions';
+export type * from './homebrew';
+export type * from './names';
 
 export type ForgeOptions = {
-	openAI: OpenAI
+	singleton: RpgmTools
 	maxConcurrency?: number
 } & ModuleOptions;
 
-export class Forge extends RpgmModule<'forge'> {
-	override id = 'forge' as const;
+type ForgeSettings = {
+	ai: {
+		model: string
+		modelOverrides: {
+			names: string
+			descriptions: string
+			homebrew: string
+		}
+	}
+}
 
-	openAI: OpenAI;
+export class Forge extends RpgmModule<'rpgm-forge', ForgeSettings> {
+	static DEFAULT_SETTINGS: ForgeSettings = {
+		ai: {
+			model: '',
+			modelOverrides: {
+				names: '',
+				descriptions: '',
+				homebrew: ''
+			}
+		}
+	}
+	override name = 'RPGM Forge';
+
+	override id = 'rpgm-forge' as const;
+	override icon = '🎲';
+	override logger;
+	override tools: RpgmTools;
+
+	testModel(model: string) {
+		return ResultAsync.fromPromise((async () => {
+			const { text } = await generateText({
+				model: this.tools.ai.languageModel(model),
+				messages: [
+					{
+						role: 'user',
+						content: 'This is a test. Respond with "STOP" to indicate success.'
+					}
+				]
+			})
+			return Boolean(text.includes('STOP'));
+		})(), (e) => e instanceof Error ? e : new Error("Failed to test model."));
+	}
+
 	queue: ForgeQueue;
 
 	constructor(options: ForgeOptions) {
-		super(options);
-		this.openAI = options.openAI;
+		super(options, Forge.DEFAULT_SETTINGS);
+		this._settings.value = options.settings.load() as ForgeSettings ?? Forge.DEFAULT_SETTINGS;
 		this.queue = new ForgeQueue(options.maxConcurrency);
+		this.logger = RPGMLogger.fromModule(this, options.logger.show);
+		this.tools = options.singleton;
+		this.init();
 	}
 
 	generateNames = generateNames.bind(this);
+	generateDescriptions = generateDescriptions.bind(this);
+	generateHomebrew = generateHomebrew.bind(this);
 }

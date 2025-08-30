@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"paths": {
 			"$rpgm/*": [
-				"./tools/*/src/*"
+				"./tools/*/src"
 			],
 			"#/*": [
 				"./shared/src/*"
@@ -15,18 +15,18 @@
 			"DOM.Iterable"
 		],
 		"types": [
-			"./shared/types/index.d.ts"
+			"vue"
 		],
 		"module": "esnext",
-		"noEmit": true,
 		"target": "esnext",
 		"moduleResolution": "bundler",
 		"declaration": true,
 		"outDir": "./dist",
-		"incremental": true,
+		"baseUrl": ".",
 		"esModuleInterop": true,
 		"noImplicitOverride": true,
 		"resolveJsonModule": true,
+		"skipLibCheck": true,
 		/* Linting */
 		"strict": true,
 		"noUnusedLocals": true,
@@ -34,6 +34,11 @@
 		"noFallthroughCasesInSwitch": true
 	},
 	"include": [
-		"./**/*.ts"
+		"./tools/**/*.ts",
+		"./shared/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
 	]
 }

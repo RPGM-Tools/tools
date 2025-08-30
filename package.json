@@ -1,55 +1,42 @@
 {
 	"$schema": "https://github.com/SchemaStore/schemastore/raw/refs/heads/master/src/schemas/json/package.json",
 	"name": "@rpgm/tools",
-	"type": "module",
+	"scripts": {
+		"build": "rimraf dist && tsc -b && tsc-alias"
+	},
 	"exports": {
-		".": {
-			"import": "./shared/src/index.ts",
-			"types": "./shared/types/index.d.ts"
-		},
-		"./forge": "./tools/forge/src/index.ts",
-		"./vault": "./tools/vault/src/index.ts"
+		"./forge": "./dist/tools/forge/src/index.js",
+		"./vault": "./dist/tools/vault/src/index.js",
+		".": "./dist/shared/src/index.js"
 	},
 	"packageManager": "pnpm@10.13.1",
-	"types": "./shared/types/index.d.ts",
-	"publishConfig": {
-		"exports": {
-			"types": "./shared/types/index.d.ts",
-			"./forge": {
-				"types": "./tools/forge/src/index.d.ts",
-				"import": "./tools/forge/src/index.js"
-			},
-			"./vault": {
-				"types": "./tools/vault/src/index.d.ts",
-				"import": "./tools/vault/src/index.js"
-			}
-		}
-	},
 	"author": "dallenb4",
 	"license": "MIT",
 	"devDependencies": {
-		"@eslint/js": "^9.33.0",
+		"@eslint/js": "^9.34.0",
 		"@stylistic/eslint-plugin": "^5.2.3",
-		"eslint": "^9.33.0",
-		"eslint-plugin-jsdoc": "^54.1.0",
+		"@vueuse/core": "^13.7.0",
+		"eslint": "^9.34.0",
+		"eslint-plugin-jsdoc": "^54.1.1",
 		"eslint-plugin-simple-import-sort": "^12.1.1",
+		"neverthrow": "^8.2.0",
+		"rimraf": "^6.0.1",
+		"tsc-alias": "^1.8.16",
 		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.39.1",
+		"typescript-eslint": "^8.41.0",
 		"vitest": "^3.2.4",
-		"neverthrow": "^8.2.0",
-		"openai": "^5.12.2"
+		"vue": "^3.5.20"
 	},
-	"dependencies": {},
 	"peerDependencies": {
+		"@vueuse/core": "^13.7.0",
 		"neverthrow": "^8.2.0",
-		"openai": "^5.12.2"
+		"vue": "^3.5.20"
 	},
-	"peerDependenciesMeta": {
-		"neverthrow": {
-			"optional": false
-		},
-		"openai": {
-			"optional": false
-		}
+	"dependencies": {
+		"@ai-sdk/openai": "^2.0.23",
+		"@ai-sdk/openai-compatible": "^1.0.13",
+		"@openrouter/ai-sdk-provider": "^1.1.2",
+		"ai": "^5.0.27",
+		"slugify": "^1.6.6"
 	}
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Result } from 'neverthrow';
-import { ResultAsync } from 'neverthrow';
+import { err, ResultAsync } from 'neverthrow';
 
 export type QueueOptions = Partial<{
 	autoDone: boolean
@@ -46,17 +46,11 @@ export class ForgeQueue {
 				cb(r);
 				if (options.autoDone)
 					done();
+			}, (e) => {
+				cb(err(e));
+				if (options.autoDone)
+					done();
 			});
 		}
 	}
 }
-
-async function generateItem(_options: number) {
-	return new Promise<string>((resolve) => {
-		setTimeout(() => {
-			resolve('Item generated');
-		}, 1000);
-	});
-}
-
-new ForgeQueue(4).generate(() => ResultAsync.fromPromise(generateItem(1), () => 'Error')); 
