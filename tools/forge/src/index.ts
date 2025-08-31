@@ -49,6 +49,7 @@ export class Forge extends RpgmModule<'rpgm-forge', ForgeSettings> {
 	override tools: RpgmTools;
 
 	testModel(model: string) {
+		this.settings
 		return ResultAsync.fromPromise((async () => {
 			const { text } = await generateText({
 				model: this.tools.ai.languageModel(model),

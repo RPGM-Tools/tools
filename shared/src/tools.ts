@@ -12,14 +12,15 @@ type RpgmToolsSettings = {
 
 type ToolsOptions = ModuleOptions;
 
+// Monkey patch OpenAICompatibleChatLanguageModel to support structured outputs
 const doGenerateOld = OpenAICompatibleChatLanguageModel.prototype.doGenerate;
-
 const doGenerateNew: typeof doGenerateOld = async function(this: OpenAICompatibleChatLanguageModel, ...args) {
 	(this.supportsStructuredOutputs as boolean) = true;
 	return doGenerateOld.apply(this, args);
 }
 
 OpenAICompatibleChatLanguageModel.prototype.doGenerate = doGenerateNew;
+// --------------------------------------------------------------------
 
 export class RpgmTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
 	static DEFAULT_SETTINGS: RpgmToolsSettings = {
