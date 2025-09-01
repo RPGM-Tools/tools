@@ -1,16 +1,12 @@
-import { Ref, UnwrapNestedRefs } from 'vue';
-import type { ModuleOptions } from '.';
-import { RPGMLogger } from './logger';
-import { RpgmTools } from './tools';
+import { RpgmLogger } from './logger';
+import { AbstractTools } from './tools';
 export declare abstract class RpgmModule<ID extends string = string, Settings extends object = object> {
-    protected options: ModuleOptions;
-    abstract id: ID;
+    abstract readonly id: ID;
     abstract icon: string;
     abstract name: string;
-    protected readonly _settings: Ref<Settings>;
-    readonly settings: UnwrapNestedRefs<Settings>;
-    abstract tools: RpgmTools;
-    abstract logger: RPGMLogger;
-    constructor(options: ModuleOptions, settings: Settings);
-    protected init(): void;
+    abstract readonly settings: Settings;
+    protected abstract tools: AbstractTools;
+    abstract logger: RpgmLogger;
+    abstract save(data: Settings): void;
+    abstract load(): Settings | null;
 }

@@ -1,11 +1,11 @@
 import { err, ok } from 'neverthrow';
-import type { Forge } from '.';
+import type { AbstractForge } from '.';
 import { generateText } from 'ai';
 
 type Method = 'ai' | 'simple';
 type Gender = 'male' | 'female' | 'nonbinary' | 'any';
 
-type NamesOptions = {
+export type NamesOptions = {
 	quantity: number
 	method: Method
 	type: string
@@ -27,7 +27,7 @@ function prompt(options: NamesOptions): string {
 	return prompt;
 }
 
-export function generateNames(this: Forge, options: NamesOptions) {
+export function generateNames(this: AbstractForge, options: NamesOptions) {
 	return this.queue.generate(
 		async () => generateText({
 			model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.names || this.settings.ai.model),

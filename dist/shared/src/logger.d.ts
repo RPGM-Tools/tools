@@ -1,15 +1,19 @@
 import type { RpgmModule } from "./module";
 type Msg = unknown[];
-type RPGMLogging<T extends keyof RPGMLogger<never>, K extends keyof RPGMLogger<never>> = Omit<RPGMLogger<T | K>, T | K>;
-export declare class RPGMLogger<T extends keyof RPGMLogger<T> = never> {
+type RpgmLogging<T extends keyof RpgmLogger<never>, K extends keyof RpgmLogger<never>> = Omit<RpgmLogger<T | K>, T | K>;
+export declare class RpgmLogger<T extends keyof RpgmLogger<T> = never> {
     private _prefix;
-    show: (method: 'log' | 'warn' | 'error', message: string) => void;
-    constructor(_prefix: string | undefined, show: (method: 'log' | 'warn' | 'error', message: string) => void);
-    static fromModule(mod: RpgmModule, show: typeof this.prototype.show): RPGMLogger<never>;
-    private options;
-    get visible(): RPGMLogging<T, "visible" | "debug">;
-    styled(style: string): RPGMLogging<T, "styled">;
-    prefixed(prefix: string): RPGMLogging<T, "prefixed">;
+    options?: Partial<{
+        show: (method: "log" | "warn" | "error", message: string) => void;
+    }> | undefined;
+    constructor(_prefix?: string, options?: Partial<{
+        show: (method: "log" | "warn" | "error", message: string) => void;
+    }> | undefined);
+    static fromModule(mod: RpgmModule, options?: RpgmLogger['options']): RpgmLogger<never>;
+    private state;
+    get visible(): RpgmLogging<T, "visible" | "debug">;
+    styled(style: string): RpgmLogging<T, "styled">;
+    prefixed(prefix: string): RpgmLogging<T, "prefixed">;
     log(...msgs: Msg): void;
     warn(...msgs: Msg): void;
     error(...msgs: Msg): void;

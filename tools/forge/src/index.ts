@@ -1,5 +1,4 @@
-import { RPGMLogger } from '#/logger';
-import { RpgmTools, type ModuleOptions } from '#/index';
+import { RpgmLogger } from '#/logger';
 
 import { ForgeQueue } from './queue';
 import { ResultAsync } from 'neverthrow';
@@ -14,12 +13,8 @@ export type * from './descriptions';
 export type * from './homebrew';
 export type * from './names';
 
-export type ForgeOptions = {
-	singleton: RpgmTools
-	maxConcurrency?: number
-} & ModuleOptions;
-
 type ForgeSettings = {
+	mode: 'rpgm' | 'diy' | 'offline'
 	ai: {
 		model: string
 		modelOverrides: {
@@ -30,8 +25,9 @@ type ForgeSettings = {
 	}
 }
 
-export class Forge extends RpgmModule<'rpgm-forge', ForgeSettings> {
+export abstract class AbstractForge extends RpgmModule<'rpgm-forge', ForgeSettings> {
 	static DEFAULT_SETTINGS: ForgeSettings = {
+		mode: 'rpgm',
 		ai: {
 			model: '',
 			modelOverrides: {
@@ -41,15 +37,13 @@ export class Forge extends RpgmModule<'rpgm-forge', ForgeSettings> {
 			}
 		}
 	}
-	override name = 'RPGM Forge';
+	override name = 'Rpgm Forge';
 
 	override id = 'rpgm-forge' as const;
 	override icon = '🎲';
-	override logger;
-	override tools: RpgmTools;
+	override logger = RpgmLogger.fromModule(this);
 
 	testModel(model: string) {
-		this.settings
 		return ResultAsync.fromPromise((async () => {
 			const { text } = await generateText({
 				model: this.tools.ai.languageModel(model),
@@ -64,16 +58,7 @@ export class Forge extends RpgmModule<'rpgm-forge', ForgeSettings> {
 		})(), (e) => e instanceof Error ? e : new Error("Failed to test model."));
 	}
 
-	queue: ForgeQueue;
-
-	constructor(options: ForgeOptions) {
-		super(options, Forge.DEFAULT_SETTINGS);
-		this._settings.value = options.settings.load() as ForgeSettings ?? Forge.DEFAULT_SETTINGS;
-		this.queue = new ForgeQueue(options.maxConcurrency);
-		this.logger = RPGMLogger.fromModule(this, options.logger.show);
-		this.tools = options.singleton;
-		this.init();
-	}
+	queue = new ForgeQueue(4);
 
 	generateNames = generateNames.bind(this);
 	generateDescriptions = generateDescriptions.bind(this);

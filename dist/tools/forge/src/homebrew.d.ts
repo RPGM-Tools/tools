@@ -1,4 +1,4 @@
-import { Forge } from ".";
+import { AbstractForge } from ".";
 export type Homebrew = {
     name: string;
     custom_name: string;
@@ -16,7 +16,7 @@ export type HomebrewOptions = {
     language: string;
     schema: HomebrewSchema;
 };
-type HomebrewField = {
+export type HomebrewField = {
     name: string;
     description: string;
 } & ({
@@ -29,5 +29,4 @@ type HomebrewField = {
     type: "number";
     value?: number;
 });
-export declare function generateHomebrew(this: Forge, options: HomebrewOptions): import("neverthrow").ResultAsync<Homebrew, Error>;
-export {};
+export declare function generateHomebrew(this: AbstractForge, options: HomebrewOptions): import("neverthrow").ResultAsync<Homebrew, Error>;

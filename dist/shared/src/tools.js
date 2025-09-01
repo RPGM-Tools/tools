@@ -1,5 +1,5 @@
 import { RpgmModule } from './module';
-import { RPGMLogger } from './logger';
+import { RpgmLogger } from './logger';
 import { createOpenAICompatible, OpenAICompatibleChatLanguageModel } from '@ai-sdk/openai-compatible';
 // Monkey patch OpenAICompatibleChatLanguageModel to support structured outputs
 const doGenerateOld = OpenAICompatibleChatLanguageModel.prototype.doGenerate;
@@ -9,17 +9,17 @@ const doGenerateNew = async function (...args) {
 };
 OpenAICompatibleChatLanguageModel.prototype.doGenerate = doGenerateNew;
 // --------------------------------------------------------------------
-export class RpgmTools extends RpgmModule {
+export class AbstractTools extends RpgmModule {
     static DEFAULT_SETTINGS = {
         ai: {
             apiKey: '',
             baseURL: ''
         }
     };
-    name = 'RPGM Tools';
+    name = 'Rpgm Tools';
     id = 'rpgm-tools';
     icon = '🛠️';
-    logger;
+    logger = RpgmLogger.fromModule(this);
     get ai() {
         return createOpenAICompatible({
             name: 'custom',
@@ -29,12 +29,6 @@ export class RpgmTools extends RpgmModule {
         });
     }
     tools = this;
-    constructor(options) {
-        super(options, RpgmTools.DEFAULT_SETTINGS);
-        this._settings.value = options.settings.load() ?? RpgmTools.DEFAULT_SETTINGS;
-        this.logger = RPGMLogger.fromModule(this, options.logger.show);
-        this.init();
-    }
 }
 function makecustomfetch(onerror) {
     return async (input, init) => {

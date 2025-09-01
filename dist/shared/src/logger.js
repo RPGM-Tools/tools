@@ -1,44 +1,44 @@
-export class RPGMLogger {
+export class RpgmLogger {
     _prefix;
-    show;
-    constructor(_prefix = '', show) {
+    options;
+    constructor(_prefix = '', options) {
         this._prefix = _prefix;
-        this.show = show;
+        this.options = options;
     }
-    static fromModule(mod, show) {
-        return new RPGMLogger(`${mod.icon} ${mod.name} | `, show);
+    static fromModule(mod, options) {
+        return new RpgmLogger(`${mod.icon} ${mod.name} | `, options);
     }
-    options = {
+    state = {
         visible: false,
         style: '',
         prefix: ''
     };
     get visible() {
-        this.options.visible = true;
+        this.state.visible = true;
         return this;
     }
     styled(style) {
-        this.options.style = style;
+        this.state.style = style;
         return this;
     }
     prefixed(prefix) {
-        this.options.prefix = prefix;
+        this.state.prefix = prefix;
         return this;
     }
     log(...msgs) {
-        this.options.style ||= 'color: #ad8cef; font-weight: bold;';
+        this.state.style ||= 'color: #ad8cef; font-weight: bold;';
         this.send('log', ...msgs);
     }
     warn(...msgs) {
-        this.options.style ||= 'color: #d47b4e; font-weight: bold;';
+        this.state.style ||= 'color: #d47b4e; font-weight: bold;';
         this.send('warn', ...msgs);
     }
     error(...msgs) {
-        this.options.style ||= 'color: #f46464; font-weight: bold;';
+        this.state.style ||= 'color: #f46464; font-weight: bold;';
         this.send('error', ...msgs);
     }
     debug(...msgs) {
-        this.options.style ||= 'color: #dddddd; font-weight: bold;';
+        this.state.style ||= 'color: #dddddd; font-weight: bold;';
         this.send('debug', ...msgs);
     }
     send(method, ...msgs) {
@@ -50,11 +50,11 @@ export class RPGMLogger {
                     acc.objects.push(msg);
                 return acc;
             }, { strings: [], objects: [] });
-            const formattedMessage = `%c${this.options.prefix}${strings.join(' ')}`;
+            const formattedMessage = `%c${this.state.prefix}${strings.join(' ')}`;
             /* eslint-disable-next-line no-console */
-            console[method](formattedMessage, this.options.style, ...objects);
-            if (this.options.visible && method !== 'debug')
-                this.show(method, strings.join(' ') + objects.map((o) => JSON.stringify(o, null, 2)).join(' '));
+            console[method](formattedMessage, this.state.style, ...objects);
+            if (this.options?.show && this.state.visible && method !== 'debug')
+                this.options.show(method, strings.join(' ') + objects.map((o) => JSON.stringify(o, null, 2)).join(' '));
             this._reset();
         }
         catch (e) {
@@ -63,7 +63,7 @@ export class RPGMLogger {
         }
     }
     _reset() {
-        this.options = {
+        this.state = {
             prefix: this._prefix,
             visible: false,
             style: '',

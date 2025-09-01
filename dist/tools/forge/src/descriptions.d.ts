@@ -1,4 +1,4 @@
-import type { Forge } from ".";
+import type { AbstractForge } from ".";
 type DescriptionsOptions = {
     name: string;
     type: string;
@@ -11,5 +11,5 @@ type DescriptionsOptions = {
 export type Description = {
     description: string;
 };
-export declare function generateDescriptions(this: Forge, options: DescriptionsOptions): import("neverthrow").ResultAsync<Description, Error>;
+export declare function generateDescriptions(this: AbstractForge, options: DescriptionsOptions): import("neverthrow").ResultAsync<Description, Error>;
 export {};

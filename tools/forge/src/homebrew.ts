@@ -1,5 +1,5 @@
 import { generateObject, jsonSchema } from "ai";
-import { Forge } from ".";
+import { AbstractForge } from ".";
 import type { JSONSchema7 } from "ai";
 import slugify from "slugify";
 import { err, ok } from "neverthrow";
@@ -30,7 +30,7 @@ type HomebrewResponse = {
 	fields: { [key: string]: string | number | boolean }
 }
 
-type HomebrewField = {
+export type HomebrewField = {
 	name: string
 	description: string
 } & ({
@@ -69,7 +69,7 @@ function prompt(options: HomebrewOptions) {
 	].join("\n");
 }
 
-export function generateHomebrew(this: Forge, options: HomebrewOptions) {
+export function generateHomebrew(this: AbstractForge, options: HomebrewOptions) {
 	return this.queue.generate(
 		async () => generateObject({
 			model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.homebrew || this.settings.ai.model),

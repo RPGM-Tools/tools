@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import type { Forge } from ".";
+import type { AbstractForge } from ".";
 import { err, ok } from "neverthrow";
 
 
@@ -52,7 +52,7 @@ function prompt(options: DescriptionsOptions): string {
 }
 
 
-export function generateDescriptions(this: Forge, options: DescriptionsOptions) {
+export function generateDescriptions(this: AbstractForge, options: DescriptionsOptions) {
 	return this.queue.generate(
 		async () => generateText({
 			model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.descriptions || this.settings.ai.model),

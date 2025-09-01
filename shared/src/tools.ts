@@ -1,6 +1,5 @@
 import { RpgmModule } from '#/module';
-import { RPGMLogger } from '#/logger';
-import { ModuleOptions } from '.';
+import { RpgmLogger } from '#/logger';
 import { createOpenAICompatible, OpenAICompatibleChatLanguageModel } from '@ai-sdk/openai-compatible';
 
 type RpgmToolsSettings = {
@@ -9,8 +8,6 @@ type RpgmToolsSettings = {
 		baseURL: string
 	}
 }
-
-type ToolsOptions = ModuleOptions;
 
 // Monkey patch OpenAICompatibleChatLanguageModel to support structured outputs
 const doGenerateOld = OpenAICompatibleChatLanguageModel.prototype.doGenerate;
@@ -22,7 +19,7 @@ const doGenerateNew: typeof doGenerateOld = async function(this: OpenAICompatibl
 OpenAICompatibleChatLanguageModel.prototype.doGenerate = doGenerateNew;
 // --------------------------------------------------------------------
 
-export class RpgmTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
+export abstract class AbstractTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
 	static DEFAULT_SETTINGS: RpgmToolsSettings = {
 		ai: {
 			apiKey: '',
@@ -30,10 +27,10 @@ export class RpgmTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
 		}
 	};
 
-	override name = 'RPGM Tools';
+	override name = 'Rpgm Tools';
 	override id = 'rpgm-tools' as const;
-	override icon: string = '🛠️';
-	override logger;
+	override icon = '🛠️';
+	override logger = RpgmLogger.fromModule(this);
 
 	get ai() {
 		return createOpenAICompatible({
@@ -45,13 +42,6 @@ export class RpgmTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
 	}
 
 	override tools = this;
-
-	constructor(options: ToolsOptions) {
-		super(options, RpgmTools.DEFAULT_SETTINGS);
-		this._settings.value = options.settings.load() as RpgmToolsSettings ?? RpgmTools.DEFAULT_SETTINGS;
-		this.logger = RPGMLogger.fromModule(this, options.logger.show);
-		this.init();
-	}
 }
 
 function makecustomfetch(onerror: (err: any) => void): typeof fetch {
