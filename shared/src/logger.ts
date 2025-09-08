@@ -1,4 +1,4 @@
-import type { RpgmModule } from "./module";
+import type { IRpgmModule } from "#/module";
 
 type Msg = unknown[];
 
@@ -10,9 +10,9 @@ export class RpgmLogger<T extends keyof RpgmLogger<T> = never> {
 		public options?: Partial<{
 			show: (method: 'log' | 'warn' | 'error', message: string) => void
 		}>
-	) { }
+	) { this._reset(); }
 
-	static fromModule(mod: RpgmModule, options?: RpgmLogger['options']) {
+	static fromModule(mod: IRpgmModule, options?: RpgmLogger['options']) {
 		return new RpgmLogger(`${mod.icon} ${mod.name} | `, options);
 	}
 

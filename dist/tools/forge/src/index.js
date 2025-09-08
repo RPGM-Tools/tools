@@ -1,32 +1,44 @@
 import { RpgmLogger } from '../../../shared/src/logger';
 import { ForgeQueue } from './queue';
 import { ResultAsync } from 'neverthrow';
-import { RpgmModule } from '../../../shared/src/module';
+import { AbstractRpgmModule } from '../../../shared/src/module';
 import { generateDescriptions } from './descriptions';
 import { generateHomebrew } from './homebrew';
 import { generateNames } from './names';
 import { generateText } from 'ai';
 export { default as HomebrewSchemas } from './data/schemas.json';
-export class AbstractForge extends RpgmModule {
-    static DEFAULT_SETTINGS = {
-        mode: 'rpgm',
-        ai: {
-            model: '',
-            modelOverrides: {
-                names: '',
-                descriptions: '',
-                homebrew: ''
-            }
-        }
+export const RPGM_MODELS = {
+    names: {
+        type: 'text',
+        provider: 'rpgm-tools',
+        slug: 'rpgm-names'
+    },
+    descriptions: {
+        type: 'text',
+        provider: 'rpgm-tools',
+        slug: 'rpgm-descriptions'
+    },
+    homebrew: {
+        type: 'text',
+        provider: 'rpgm-tools',
+        slug: 'rpgm-homebrew'
+    }
+};
+export class AbstractForge extends AbstractRpgmModule {
+    DEFAULT_SETTINGS = {
+        namesModel: RPGM_MODELS.names,
+        descriptionsModel: RPGM_MODELS.descriptions,
+        homebrewModel: RPGM_MODELS.homebrew,
     };
     name = 'Rpgm Forge';
     id = 'rpgm-forge';
     icon = '🎲';
     logger = RpgmLogger.fromModule(this);
-    testModel(model) {
+    testTextModel(provider, model) {
+        const langModel = this.tools.textAi(provider, model);
         return ResultAsync.fromPromise((async () => {
             const { text } = await generateText({
-                model: this.tools.ai.languageModel(model),
+                model: langModel,
                 messages: [
                     {
                         role: 'user',
@@ -38,7 +50,7 @@ export class AbstractForge extends RpgmModule {
         })(), (e) => e instanceof Error ? e : new Error("Failed to test model."));
     }
     queue = new ForgeQueue(4);
-    generateNames = generateNames.bind(this);
-    generateDescriptions = generateDescriptions.bind(this);
-    generateHomebrew = generateHomebrew.bind(this);
+    get generateNames() { return generateNames.bind(this); }
+    get generateDescriptions() { return generateDescriptions.bind(this); }
+    get generateHomebrew() { return generateHomebrew.bind(this); }
 }

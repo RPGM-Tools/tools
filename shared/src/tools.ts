@@ -1,11 +1,106 @@
-import { RpgmModule } from '#/module';
+import { AbstractRpgmModule, IRpgmModule } from '#/module';
 import { RpgmLogger } from '#/logger';
-import { createOpenAICompatible, OpenAICompatibleChatLanguageModel } from '@ai-sdk/openai-compatible';
+import { ProviderV2 } from '@ai-sdk/provider';
+import { createOpenAICompatible, OpenAICompatibleChatLanguageModel, OpenAICompatibleProvider } from '@ai-sdk/openai-compatible';
+import { err, ok } from 'neverthrow';
 
-type RpgmToolsSettings = {
-	ai: {
-		apiKey: string
-		baseURL: string
+export namespace AbstractTools {
+	export interface Settings extends AbstractRpgmModule.ModuleSettings {
+		textProviders: TextProvider[],
+	}
+}
+
+export type RpgmModels = 'rpgm-names' | 'rpgm-descriptions' | 'rpgm-homebrew';
+
+type Options = {
+	name: string
+	baseURL: string
+	apiKey: string
+}
+
+export type TextModel = Model<'text'>
+
+export type Model<T extends string> = {
+	type: T,
+	/** The ID of the provider that provides the model */
+	provider: string,
+	slug: RpgmModels | (string & {})
+}
+
+interface ProviderDef {
+	name: string
+	classIcon: string
+	create(this: AbstractTools, options: Options): ProviderV2
+	fetchModels?: (options: Pick<Options, 'apiKey' | 'baseURL'>) => Promise<string[]>
+}
+
+export const DIY_PROVIDERS: Record<string, ProviderDef> = {
+	'openai-compatible': {
+		name: 'OpenAI Compatible',
+		classIcon: 'fa-solid fa-sparkles',
+		create({ apiKey, baseURL, name }) { return createOpenAICompatible({ apiKey, baseURL, name }); },
+		fetchModels: ({ apiKey, baseURL }) => fetch(new URL('models', baseURL), {
+			headers: { Authorization: `Bearer ${apiKey}` }
+		}).then(res => res.json()).then(r => r.data.map((m: any) => m.id))
+	}
+} as const;
+
+export const PROVIDERS: Record<string, ProviderDef> = {
+	'rpgm-tools': {
+		name: 'RPGM Tools',
+		classIcon: 'rp-dice',
+		create() { return this.rpgmTextAi(); }
+	},
+	offline: {
+		name: 'Offline',
+		classIcon: 'fa-solid fa-wifi-slash',
+		create() { return this.rpgmTextAi(); }
+	},
+	...DIY_PROVIDERS
+} as const;
+
+export type TextProvider = {
+	id: string
+	name: string
+	type: string
+	baseURL: string
+	apiKey: string
+	textModels: string[]
+}
+
+export abstract class AbstractTools extends AbstractRpgmModule<AbstractTools.Settings> implements IRpgmModule<'rpgm-tools', AbstractTools.Settings> {
+	DEFAULT_SETTINGS = {
+		textProviders: [],
+	};
+
+	name = 'Rpgm Tools';
+	id = 'rpgm-tools' as const;
+	icon = '🛠️';
+	logger = RpgmLogger.fromModule(this);
+
+	textAiFromModel(model: TextModel) {
+		const { provider, slug } = model;
+		if (provider === 'rpgm-tools') return ok(this.rpgmTextAi()(model.slug as any));
+		const providerDef = this.settings.get('textProviders')?.find(p => p.id === provider);
+		if (!providerDef) return err(new Error(`Unknown provider: ${provider}`));
+		return ok(this.textAi(providerDef, slug));
+	}
+
+	textAi(provider: TextProvider, slug: string) {
+		const { name, type, apiKey, baseURL } = provider;
+		const p = PROVIDERS[type].create.call(this, { apiKey, baseURL, name });
+		return p.languageModel(slug);
+	}
+
+	protected abstract get rpgmTextAiOptions(): { baseURL: string, apiKey: string }
+
+	rpgmTextAi(): OpenAICompatibleProvider<RpgmModels, never, never, never> {
+		const { baseURL, apiKey } = this.rpgmTextAiOptions;
+		return createOpenAICompatible({
+			name: 'rpgm',
+			baseURL,
+			apiKey,
+		});
 	}
 }
 
@@ -18,46 +113,3 @@ const doGenerateNew: typeof doGenerateOld = async function(this: OpenAICompatibl
 
 OpenAICompatibleChatLanguageModel.prototype.doGenerate = doGenerateNew;
 // --------------------------------------------------------------------
-
-export abstract class AbstractTools extends RpgmModule<'rpgm-tools', RpgmToolsSettings> {
-	static DEFAULT_SETTINGS: RpgmToolsSettings = {
-		ai: {
-			apiKey: '',
-			baseURL: ''
-		}
-	};
-
-	override name = 'Rpgm Tools';
-	override id = 'rpgm-tools' as const;
-	override icon = '🛠️';
-	override logger = RpgmLogger.fromModule(this);
-
-	get ai() {
-		return createOpenAICompatible({
-			name: 'custom',
-			baseURL: this.settings.ai.baseURL,
-			apiKey: this.settings.ai.apiKey,
-			fetch: makecustomfetch(e => this.logger.error(e))
-		})
-	}
-
-	override tools = this;
-}
-
-function makecustomfetch(onerror: (err: any) => void): typeof fetch {
-	return async (input: RequestInfo | URL, init?: RequestInit) => {
-		try {
-			const res = await fetch(input, init);
-			if (!res.ok) {
-				// this is where you detect http-level errors
-				const body = await res.json();
-				throw new Error(body.error.message || res.statusText)
-			}
-			return res;
-		} catch (err) {
-			// network or low-level fetch error
-			onerror(err);
-			throw err;
-		}
-	};
-}

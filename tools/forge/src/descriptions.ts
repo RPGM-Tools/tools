@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import type { AbstractForge } from ".";
-import { err, ok } from "neverthrow";
+import { err, errAsync, ok } from "neverthrow";
 
 
 type DescriptionsOptions = {
@@ -53,9 +53,13 @@ function prompt(options: DescriptionsOptions): string {
 
 
 export function generateDescriptions(this: AbstractForge, options: DescriptionsOptions) {
+	const descriptionsModel = this.settings.get('descriptionsModel');
+	if (!descriptionsModel) return errAsync(new Error('No descriptions model configured.'));
+	const model = this.tools.textAiFromModel.call(this.tools, descriptionsModel);
+	if (model.isErr()) return errAsync(model.error);
 	return this.queue.generate(
 		async () => generateText({
-			model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.descriptions || this.settings.ai.model),
+			model: model.value,
 			messages: [
 				{
 					role: 'system',

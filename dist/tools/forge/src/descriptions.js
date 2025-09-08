@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { err, ok } from "neverthrow";
+import { err, errAsync, ok } from "neverthrow";
 function prompt(options) {
     let prompt = '';
     prompt += `I would like a description for a(n) {${options.type.toLowerCase()}}.\n`;
@@ -36,8 +36,14 @@ function prompt(options) {
     return prompt;
 }
 export function generateDescriptions(options) {
+    const descriptionsModel = this.settings.get('descriptionsModel');
+    if (!descriptionsModel)
+        return errAsync(new Error('No descriptions model configured.'));
+    const model = this.tools.textAiFromModel.call(this.tools, descriptionsModel);
+    if (model.isErr())
+        return errAsync(model.error);
     return this.queue.generate(async () => generateText({
-        model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.descriptions || this.settings.ai.model),
+        model: model.value,
         messages: [
             {
                 role: 'system',

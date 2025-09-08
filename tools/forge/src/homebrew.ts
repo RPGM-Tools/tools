@@ -2,7 +2,7 @@ import { generateObject, jsonSchema } from "ai";
 import { AbstractForge } from ".";
 import type { JSONSchema7 } from "ai";
 import slugify from "slugify";
-import { err, ok } from "neverthrow";
+import { err, errAsync, ok } from "neverthrow";
 
 export type Homebrew = {
 	name: string
@@ -70,9 +70,13 @@ function prompt(options: HomebrewOptions) {
 }
 
 export function generateHomebrew(this: AbstractForge, options: HomebrewOptions) {
+	const homebrewModel = this.settings.get('homebrewModel');
+	if (!homebrewModel) return errAsync(new Error('No homebrew model configured.'));
+	const model = this.tools.textAiFromModel.call(this.tools, homebrewModel);
+	if (model.isErr()) return errAsync(model.error);
 	return this.queue.generate(
 		async () => generateObject({
-			model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.homebrew || this.settings.ai.model),
+			model: model.value,
 			output: 'object',
 			mode: 'json',
 			messages: [
@@ -87,6 +91,7 @@ export function generateHomebrew(this: AbstractForge, options: HomebrewOptions) 
 			],
 			schema: jsonSchema<HomebrewResponse>({
 				type: 'object',
+				strict: true,
 				title: options.schema.name,
 				additionalProperties: false,
 				properties: {
@@ -118,7 +123,7 @@ export function generateHomebrew(this: AbstractForge, options: HomebrewOptions) 
 					}
 				},
 				required: ['name', 'flavor_text', 'fields']
-			})
+			} as JSONSchema7 & { strict: boolean })
 		}).then(({ object }) => {
 			const output: Homebrew = {
 				name: options.schema.name,

@@ -1,2 +1,2 @@
-export class RpgmModule {
+export class AbstractRpgmModule {
 }

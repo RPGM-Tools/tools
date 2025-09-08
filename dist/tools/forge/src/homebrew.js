@@ -1,6 +1,6 @@
 import { generateObject, jsonSchema } from "ai";
 import slugify from "slugify";
-import { err, ok } from "neverthrow";
+import { err, errAsync, ok } from "neverthrow";
 function typeString(type) {
     switch (type) {
         case "number": return type;
@@ -25,8 +25,14 @@ function prompt(options) {
     ].join("\n");
 }
 export function generateHomebrew(options) {
+    const homebrewModel = this.settings.get('homebrewModel');
+    if (!homebrewModel)
+        return errAsync(new Error('No homebrew model configured.'));
+    const model = this.tools.textAiFromModel.call(this.tools, homebrewModel);
+    if (model.isErr())
+        return errAsync(model.error);
     return this.queue.generate(async () => generateObject({
-        model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.homebrew || this.settings.ai.model),
+        model: model.value,
         output: 'object',
         mode: 'json',
         messages: [
@@ -41,6 +47,7 @@ export function generateHomebrew(options) {
         ],
         schema: jsonSchema({
             type: 'object',
+            strict: true,
             title: options.schema.name,
             additionalProperties: false,
             properties: {

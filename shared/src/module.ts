@@ -1,16 +1,35 @@
 import { RpgmLogger } from '#/logger';
-import { AbstractTools } from '#/tools';
+import type { AbstractTools } from '#/tools';
+import type { AbstractForge } from '@rpgm/forge';
+import { SettingsMap } from '#/settings';
 
-export abstract class RpgmModule<ID extends string = string, Settings extends object = object> {
-	abstract readonly id: ID;
-	abstract icon: string;
-	abstract name: string;
+export type ModuleMap = {
+	'rpgm-tools': typeof AbstractTools
+	'rpgm-forge': typeof AbstractForge
+}
 
-	abstract readonly settings: Settings;
+type AbstractConstructor<T> = abstract new (...args: any[]) => T;
+export namespace AbstractRpgmModule {
+	export type ModuleSettings = object;
+}
 
-	protected abstract tools: AbstractTools;
+export type RealizedRpgmModule
+	<ID extends keyof ModuleMap = keyof ModuleMap, Settings extends AbstractRpgmModule.ModuleSettings = AbstractRpgmModule.ModuleSettings>
+	= IRpgmModule<ID> & AbstractRpgmModule<Settings>;
+export type RpgmModuleConstructor = AbstractConstructor<RealizedRpgmModule> & Omit<typeof AbstractRpgmModule, 'prototype'>;
 
-	abstract logger: RpgmLogger;
+export interface IRpgmModule<ID extends keyof ModuleMap = keyof ModuleMap, Settings extends AbstractRpgmModule.ModuleSettings = AbstractRpgmModule.ModuleSettings> {
+	readonly id: ID;
+	icon: string;
+	name: string;
+	logger: RpgmLogger;
+	DEFAULT_SETTINGS: Settings;
+}
+
+export abstract class AbstractRpgmModule<Settings extends AbstractRpgmModule.ModuleSettings> {
+	abstract readonly settings: SettingsMap<Settings>;
+
+	protected abstract get tools(): AbstractTools;
 
 	abstract save(data: Settings): void
 	abstract load(): Settings | null

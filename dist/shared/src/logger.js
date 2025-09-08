@@ -4,6 +4,7 @@ export class RpgmLogger {
     constructor(_prefix = '', options) {
         this._prefix = _prefix;
         this.options = options;
+        this._reset();
     }
     static fromModule(mod, options) {
         return new RpgmLogger(`${mod.icon} ${mod.name} | `, options);

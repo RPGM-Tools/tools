@@ -2,51 +2,61 @@ import { RpgmLogger } from '#/logger';
 
 import { ForgeQueue } from './queue';
 import { ResultAsync } from 'neverthrow';
-import { RpgmModule } from '../../../shared/src/module';
+import { IRpgmModule, AbstractRpgmModule } from '#/module';
 import { generateDescriptions } from './descriptions';
 import { generateHomebrew } from './homebrew';
 import { generateNames } from './names';
 import { generateText } from 'ai';
+import { TextModel, TextProvider } from '#/tools';
 export { default as HomebrewSchemas } from './data/schemas.json';
 
 export type * from './descriptions';
 export type * from './homebrew';
 export type * from './names';
 
-type ForgeSettings = {
-	mode: 'rpgm' | 'diy' | 'offline'
-	ai: {
-		model: string
-		modelOverrides: {
-			names: string
-			descriptions: string
-			homebrew: string
-		}
+export namespace AbstractForge {
+	export interface Settings extends AbstractRpgmModule.ModuleSettings {
+		namesModel: TextModel
+		descriptionsModel: TextModel
+		homebrewModel: TextModel
 	}
 }
 
-export abstract class AbstractForge extends RpgmModule<'rpgm-forge', ForgeSettings> {
-	static DEFAULT_SETTINGS: ForgeSettings = {
-		mode: 'rpgm',
-		ai: {
-			model: '',
-			modelOverrides: {
-				names: '',
-				descriptions: '',
-				homebrew: ''
-			}
-		}
+export const RPGM_MODELS = {
+	names: {
+		type: 'text',
+		provider: 'rpgm-tools',
+		slug: 'rpgm-names'
+	},
+	descriptions: {
+		type: 'text',
+		provider: 'rpgm-tools',
+		slug: 'rpgm-descriptions'
+	},
+	homebrew: {
+		type: 'text',
+		provider: 'rpgm-tools',
+		slug: 'rpgm-homebrew'
 	}
-	override name = 'Rpgm Forge';
+} as const satisfies Record<string, TextModel>;
 
-	override id = 'rpgm-forge' as const;
-	override icon = '🎲';
-	override logger = RpgmLogger.fromModule(this);
+export abstract class AbstractForge extends AbstractRpgmModule<AbstractForge.Settings> implements IRpgmModule<'rpgm-forge', AbstractForge.Settings> {
+	DEFAULT_SETTINGS = {
+		namesModel: RPGM_MODELS.names,
+		descriptionsModel: RPGM_MODELS.descriptions,
+		homebrewModel: RPGM_MODELS.homebrew,
+	}
 
-	testModel(model: string) {
+	name = 'Rpgm Forge';
+	id = 'rpgm-forge' as const;
+	icon = '🎲';
+	logger = RpgmLogger.fromModule(this);
+
+	testTextModel(provider: TextProvider, model: string) {
+		const langModel = this.tools.textAi(provider, model);
 		return ResultAsync.fromPromise((async () => {
 			const { text } = await generateText({
-				model: this.tools.ai.languageModel(model),
+				model: langModel,
 				messages: [
 					{
 						role: 'user',
@@ -60,7 +70,7 @@ export abstract class AbstractForge extends RpgmModule<'rpgm-forge', ForgeSettin
 
 	queue = new ForgeQueue(4);
 
-	generateNames = generateNames.bind(this);
-	generateDescriptions = generateDescriptions.bind(this);
-	generateHomebrew = generateHomebrew.bind(this);
+	get generateNames() { return generateNames.bind(this); }
+	get generateDescriptions() { return generateDescriptions.bind(this); }
+	get generateHomebrew() { return generateHomebrew.bind(this); }
 }

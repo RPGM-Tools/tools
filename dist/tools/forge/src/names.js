@@ -1,4 +1,4 @@
-import { err, ok } from 'neverthrow';
+import { err, errAsync, ok } from 'neverthrow';
 import { generateText } from 'ai';
 function prompt(options) {
     let prompt = '';
@@ -9,22 +9,30 @@ function prompt(options) {
     return prompt;
 }
 export function generateNames(options) {
-    return this.queue.generate(async () => generateText({
-        model: this.tools.ai.languageModel(this.settings.ai.modelOverrides.names || this.settings.ai.model),
-        messages: [
-            {
-                role: 'system',
-                content: DEV_PROMPT
-            },
-            {
-                role: 'user',
-                content: prompt(options)
-            }
-        ],
-    }).then(({ text }) => Promise.resolve(text
-        .split('\n')
-        .map(s => s.trim())
-        .filter(Boolean)).then(names => names.length ? ok({ names }) : err(new Error('Failed to generate names.'))), e => err(e instanceof Error ? e : new Error('Failed to generate names.'))));
+    const namesModel = this.settings.get('namesModel');
+    if (!namesModel)
+        return errAsync(new Error('No names model configured.'));
+    const model = this.tools.textAiFromModel.call(this.tools, namesModel);
+    if (model.isErr())
+        return errAsync(model.error);
+    return this.queue.generate(async () => {
+        return generateText({
+            model: model.value,
+            messages: [
+                {
+                    role: 'system',
+                    content: DEV_PROMPT
+                },
+                {
+                    role: 'user',
+                    content: prompt(options)
+                }
+            ],
+        }).then(({ text }) => Promise.resolve(text
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean)).then(names => names.length ? ok({ names }) : err(new Error('Failed to generate names.'))), e => err(e instanceof Error ? e : new Error('Failed to generate names.')));
+    });
 }
 const DEV_PROMPT = `
 You are NAMESMITH, a deterministic naming micro-service for fantasy settings.
