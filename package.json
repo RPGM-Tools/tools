@@ -1,12 +1,15 @@
 {
 	"$schema": "https://github.com/SchemaStore/schemastore/raw/refs/heads/master/src/schemas/json/package.json",
 	"name": "@rpgm/tools",
+	"type": "module",
 	"scripts": {
-		"build": "rimraf dist && tsc -b && tsc-alias"
+		"build": "rimraf dist && tsc -b && tsc-alias",
+		"openapi": "node ./openapi.ts"
 	},
 	"exports": {
 		"./forge": "./dist/tools/forge/src/index.js",
 		"./vault": "./dist/tools/vault/src/index.js",
+		"./client": "./dist/shared/src/client/index.js",
 		".": "./dist/shared/src/index.js"
 	},
 	"packageManager": "pnpm@10.13.1",
@@ -15,7 +18,10 @@
 	"devDependencies": {
 		"@ai-sdk/provider": "^2.0.0",
 		"@eslint/js": "^9.34.0",
+		"@hey-api/openapi-ts": "0.83.1",
 		"@stylistic/eslint-plugin": "^5.2.3",
+		"@types/node": "^24.3.1",
+		"dotenv": "^17.2.2",
 		"eslint": "^9.34.0",
 		"eslint-plugin-jsdoc": "^54.1.1",
 		"eslint-plugin-simple-import-sort": "^12.1.1",

@@ -72,7 +72,7 @@ export class RpgmLogger<T extends keyof RpgmLogger<T> = never> {
 			/* eslint-disable-next-line no-console */
 			console[method](formattedMessage, this.state.style, ...objects);
 			if (this.options?.show && this.state.visible && method !== 'debug')
-				this.options.show(method, strings.join(' ') + objects.map((o) => JSON.stringify(o, null, 2)).join(' '));
+				this.options.show(method, strings.join(' ') /* + objects.map((o) => JSON.stringify(o, null, 2)).join(' ') */);
 			this._reset();
 		} catch (e) {
 			this._reset();

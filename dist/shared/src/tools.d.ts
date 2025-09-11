@@ -37,6 +37,7 @@ export type TextProvider = {
     textModels: string[];
 };
 export declare abstract class AbstractTools extends AbstractRpgmModule<AbstractTools.Settings> implements IRpgmModule<'rpgm-tools', AbstractTools.Settings> {
+    #private;
     DEFAULT_SETTINGS: {
         textProviders: never[];
     };
@@ -46,10 +47,15 @@ export declare abstract class AbstractTools extends AbstractRpgmModule<AbstractT
     logger: RpgmLogger<never>;
     textAiFromModel(model: TextModel): import("neverthrow").Ok<import("@ai-sdk/provider").LanguageModelV2, never> | import("neverthrow").Err<never, Error>;
     textAi(provider: TextProvider, slug: string): import("@ai-sdk/provider").LanguageModelV2;
+    readonly client: import("./client/client").Client;
+    getApiPolyhedrium: <ThrowOnError extends boolean = false>(options?: import("./client").Options<import("./client").GetApiPolyhedriumData, ThrowOnError>) => import("./client/client").RequestResult<import("./client").GetApiPolyhedriumResponses, import("./client").GetApiPolyhedriumErrors, ThrowOnError, "fields">;
+    getApiUserInfo: <ThrowOnError extends boolean = false>(options?: import("./client").Options<import("./client").GetApiUserInfoData, ThrowOnError>) => import("./client/client").RequestResult<import("./client").GetApiUserInfoResponses, unknown, ThrowOnError, "fields">;
+    getApiListProducts: <ThrowOnError extends boolean = false>(options?: import("./client").Options<import("./client").GetApiListProductsData, ThrowOnError>) => import("./client/client").RequestResult<import("./client").GetApiListProductsResponses, unknown, ThrowOnError, "fields">;
     protected abstract get rpgmTextAiOptions(): {
         baseURL: string;
         apiKey: string;
     };
     rpgmTextAi(): OpenAICompatibleProvider<RpgmModels, never, never, never>;
+    constructor();
 }
 export {};

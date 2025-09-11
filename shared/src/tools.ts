@@ -3,6 +3,8 @@ import { RpgmLogger } from '#/logger';
 import { ProviderV2 } from '@ai-sdk/provider';
 import { createOpenAICompatible, OpenAICompatibleChatLanguageModel, OpenAICompatibleProvider } from '@ai-sdk/openai-compatible';
 import { err, ok } from 'neverthrow';
+import { client } from './client/client.gen';
+import { getApiListProducts, getApiPolyhedrium, getApiUserInfo } from './client';
 
 export namespace AbstractTools {
 	export interface Settings extends AbstractRpgmModule.ModuleSettings {
@@ -92,14 +94,32 @@ export abstract class AbstractTools extends AbstractRpgmModule<AbstractTools.Set
 		return p.languageModel(slug);
 	}
 
+	readonly client = client;
+
+	getApiPolyhedrium = getApiPolyhedrium
+	getApiUserInfo = getApiUserInfo
+	getApiListProducts = getApiListProducts
+
 	protected abstract get rpgmTextAiOptions(): { baseURL: string, apiKey: string }
 
 	rpgmTextAi(): OpenAICompatibleProvider<RpgmModels, never, never, never> {
 		const { baseURL, apiKey } = this.rpgmTextAiOptions;
 		return createOpenAICompatible({
 			name: 'rpgm',
-			baseURL,
+			baseURL: new URL('/api/forge', baseURL).href,
 			apiKey,
+		});
+	}
+
+	constructor() {
+		super();
+		this.#init();
+	}
+
+	#init() {
+		this.client.setConfig({
+			auth: () => this.rpgmTextAiOptions.apiKey,
+			baseUrl: this.rpgmTextAiOptions.baseURL
 		});
 	}
 }
