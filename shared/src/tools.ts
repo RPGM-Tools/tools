@@ -41,7 +41,7 @@ export const DIY_PROVIDERS: Record<string, ProviderDef> = {
 		name: 'OpenAI Compatible',
 		classIcon: 'fa-solid fa-sparkles',
 		create({ apiKey, baseURL, name }) { return createOpenAICompatible({ apiKey, baseURL, name }); },
-		fetchModels: ({ apiKey, baseURL }) => fetch(new URL('models', baseURL), {
+		fetchModels: ({ apiKey, baseURL }) => fetch(new URL('models', baseURL += baseURL.endsWith('/') ? '' : '/'), {
 			headers: { Authorization: `Bearer ${apiKey}` }
 		}).then(res => res.json()).then(r => r.data.map((m: any) => m.id))
 	}
@@ -61,7 +61,7 @@ export const PROVIDERS: Record<string, ProviderDef> = {
 	...DIY_PROVIDERS
 } as const;
 
-export type TextProvider = {
+export interface TextProvider {
 	id: string
 	name: string
 	type: string

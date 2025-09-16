@@ -44,6 +44,7 @@ export function generateDescriptions(options) {
         return errAsync(model.error);
     return this.queue.generate(async () => generateText({
         model: model.value,
+        maxRetries: 0,
         messages: [
             {
                 role: 'system',

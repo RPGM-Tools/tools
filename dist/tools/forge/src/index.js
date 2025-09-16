@@ -6,12 +6,18 @@ import { generateDescriptions } from './descriptions';
 import { generateHomebrew } from './homebrew';
 import { generateNames } from './names';
 import { generateText } from 'ai';
+import { getApiForgeUsage } from '../../../shared/src/client';
 export { default as HomebrewSchemas } from './data/schemas.json';
 export const RPGM_MODELS = {
     names: {
         type: 'text',
         provider: 'rpgm-tools',
         slug: 'rpgm-names'
+    },
+    offlineNames: {
+        type: 'text',
+        provider: 'offline',
+        slug: 'rpgm-names-offline'
     },
     descriptions: {
         type: 'text',
@@ -34,11 +40,13 @@ export class AbstractForge extends AbstractRpgmModule {
     id = 'rpgm-forge';
     icon = '🎲';
     logger = RpgmLogger.fromModule(this);
+    getApiForgeUsage = getApiForgeUsage;
     testTextModel(provider, model) {
         const langModel = this.tools.textAi(provider, model);
         return ResultAsync.fromPromise((async () => {
             const { text } = await generateText({
                 model: langModel,
+                maxRetries: 0,
                 messages: [
                     {
                         role: 'user',

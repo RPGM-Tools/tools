@@ -30,6 +30,20 @@ export type GetApiAuthByAllResponses = {
     200: unknown;
 };
 
+export type PostApiDiscordInteractionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/discord/interactions';
+};
+
+export type PostApiDiscordInteractionsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type PostApiForgeChatCompletionsData = {
     body?: never;
     path?: never;
@@ -44,6 +58,22 @@ export type PostApiForgeChatCompletionsResponses = {
     200: unknown;
 };
 
+export type GetApiForgeUsageData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/forge/usage';
+};
+
+export type GetApiForgeUsageResponses = {
+    /**
+     * The usage
+     */
+    200: number;
+};
+
+export type GetApiForgeUsageResponse = GetApiForgeUsageResponses[keyof GetApiForgeUsageResponses];
+
 export type GetApiListProductsData = {
     body?: never;
     path?: never;
@@ -57,7 +87,7 @@ export type GetApiListProductsResponses = {
     /**
      * Get a list of all products available for purchase
      */
-    default: Array<{
+    200: Array<{
         id: string;
         name: string;
         description: string | null;
@@ -96,7 +126,7 @@ export type GetApiPolyhedriumResponses = {
     /**
      * The balance
      */
-    default: number;
+    200: number;
 };
 
 export type GetApiPolyhedriumResponse = GetApiPolyhedriumResponses[keyof GetApiPolyhedriumResponses];

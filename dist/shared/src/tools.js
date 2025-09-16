@@ -9,7 +9,7 @@ export const DIY_PROVIDERS = {
         name: 'OpenAI Compatible',
         classIcon: 'fa-solid fa-sparkles',
         create({ apiKey, baseURL, name }) { return createOpenAICompatible({ apiKey, baseURL, name }); },
-        fetchModels: ({ apiKey, baseURL }) => fetch(new URL('models', baseURL), {
+        fetchModels: ({ apiKey, baseURL }) => fetch(new URL('models', baseURL += baseURL.endsWith('/') ? '' : '/'), {
             headers: { Authorization: `Bearer ${apiKey}` }
         }).then(res => res.json()).then(r => r.data.map((m) => m.id))
     }

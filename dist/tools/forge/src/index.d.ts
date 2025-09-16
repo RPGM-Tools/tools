@@ -20,6 +20,11 @@ export declare const RPGM_MODELS: {
         readonly provider: "rpgm-tools";
         readonly slug: "rpgm-names";
     };
+    readonly offlineNames: {
+        readonly type: "text";
+        readonly provider: "offline";
+        readonly slug: "rpgm-names-offline";
+    };
     readonly descriptions: {
         readonly type: "text";
         readonly provider: "rpgm-tools";
@@ -53,6 +58,7 @@ export declare abstract class AbstractForge extends AbstractRpgmModule<AbstractF
     id: "rpgm-forge";
     icon: string;
     logger: RpgmLogger<never>;
+    getApiForgeUsage: <ThrowOnError extends boolean = false>(options?: import("../../../shared/src/client").Options<import("../../../shared/src/client").GetApiForgeUsageData, ThrowOnError>) => import("../../../shared/src/client/client").RequestResult<import("../../../shared/src/client").GetApiForgeUsageResponses, unknown, ThrowOnError, "fields">;
     testTextModel(provider: TextProvider, model: string): ResultAsync<boolean, Error>;
     queue: ForgeQueue;
     get generateNames(): (options: import("./names").NamesOptions) => ResultAsync<import("./names").Names, Error>;

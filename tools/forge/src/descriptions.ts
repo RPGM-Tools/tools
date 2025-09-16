@@ -60,6 +60,7 @@ export function generateDescriptions(this: AbstractForge, options: DescriptionsO
 	return this.queue.generate(
 		async () => generateText({
 			model: model.value,
+			maxRetries: 0,
 			messages: [
 				{
 					role: 'system',

@@ -1,13 +1,12 @@
 import { err, errAsync, ok } from 'neverthrow';
 import type { AbstractForge } from '.';
 import { generateText } from 'ai';
+import { generateOfflineNames } from './offline-names';
 
-type Method = 'ai' | 'simple';
-type Gender = 'male' | 'female' | 'nonbinary' | 'any';
+export type Gender = 'male' | 'female' | 'nonbinary' | 'any';
 
 export type NamesOptions = {
 	quantity: number
-	method: Method
 	type: string
 	genre: string
 	gender: Gender
@@ -28,6 +27,9 @@ function prompt(options: NamesOptions): string {
 }
 
 export function generateNames(this: AbstractForge, options: NamesOptions) {
+	if (this.settings.get('namesModel')?.provider === 'offline') {
+		return generateOfflineNames(options);
+	}
 	const namesModel = this.settings.get('namesModel');
 	if (!namesModel) return errAsync(new Error('No names model configured.'));
 	const model = this.tools.textAiFromModel.call(this.tools, namesModel);
@@ -36,6 +38,7 @@ export function generateNames(this: AbstractForge, options: NamesOptions) {
 		async () => {
 			return generateText({
 				model: model.value,
+				maxRetries: 0,
 				messages: [
 					{
 						role: 'system',

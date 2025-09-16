@@ -1,5 +1,6 @@
 import { err, errAsync, ok } from 'neverthrow';
 import { generateText } from 'ai';
+import { generateOfflineNames } from './offline-names';
 function prompt(options) {
     let prompt = '';
     prompt += `Generate ${options.quantity} name(s) for a {${options.type}} in the {${options.genre}} genre.\n`;
@@ -9,6 +10,9 @@ function prompt(options) {
     return prompt;
 }
 export function generateNames(options) {
+    if (this.settings.get('namesModel')?.provider === 'offline') {
+        return generateOfflineNames(options);
+    }
     const namesModel = this.settings.get('namesModel');
     if (!namesModel)
         return errAsync(new Error('No names model configured.'));
@@ -18,6 +22,7 @@ export function generateNames(options) {
     return this.queue.generate(async () => {
         return generateText({
             model: model.value,
+            maxRetries: 0,
             messages: [
                 {
                     role: 'system',

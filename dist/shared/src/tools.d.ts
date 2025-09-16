@@ -28,14 +28,14 @@ interface ProviderDef {
 }
 export declare const DIY_PROVIDERS: Record<string, ProviderDef>;
 export declare const PROVIDERS: Record<string, ProviderDef>;
-export type TextProvider = {
+export interface TextProvider {
     id: string;
     name: string;
     type: string;
     baseURL: string;
     apiKey: string;
     textModels: string[];
-};
+}
 export declare abstract class AbstractTools extends AbstractRpgmModule<AbstractTools.Settings> implements IRpgmModule<'rpgm-tools', AbstractTools.Settings> {
     #private;
     DEFAULT_SETTINGS: {

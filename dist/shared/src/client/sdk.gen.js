@@ -12,9 +12,27 @@ export const getApiAuthByAll = (options) => {
         ...options
     });
 };
+export const postApiDiscordInteractions = (options) => {
+    return (options?.client ?? client).post({
+        url: '/api/discord/interactions',
+        ...options
+    });
+};
 export const postApiForgeChatCompletions = (options) => {
     return (options?.client ?? client).post({
         url: '/api/forge/chat/completions',
+        ...options
+    });
+};
+export const getApiForgeUsage = (options) => {
+    return (options?.client ?? client).get({
+        security: [
+            {
+                scheme: 'bearer',
+                type: 'http'
+            }
+        ],
+        url: '/api/forge/usage',
         ...options
     });
 };
