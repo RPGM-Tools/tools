@@ -31,7 +31,7 @@ export class AbstractTools extends AbstractRpgmModule {
     DEFAULT_SETTINGS = {
         textProviders: [],
     };
-    name = 'Rpgm Tools';
+    name = 'RPGM Tools';
     id = 'rpgm-tools';
     icon = '🛠️';
     logger = RpgmLogger.fromModule(this);

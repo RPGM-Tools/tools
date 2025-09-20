@@ -75,7 +75,7 @@ export abstract class AbstractTools extends AbstractRpgmModule<AbstractTools.Set
 		textProviders: [],
 	};
 
-	name = 'Rpgm Tools';
+	name = 'RPGM Tools';
 	id = 'rpgm-tools' as const;
 	icon = '🛠️';
 	logger = RpgmLogger.fromModule(this);
