@@ -2,6 +2,7 @@ import { err, errAsync, ok } from 'neverthrow';
 import type { AbstractForge } from '.';
 import { generateText } from 'ai';
 import { generateOfflineNames } from './offline-names';
+import { generateAdjectiveNames } from './adjective-names';
 
 export type Gender = 'male' | 'female' | 'nonbinary' | 'any';
 
@@ -27,8 +28,12 @@ function prompt(options: NamesOptions): string {
 }
 
 export function generateNames(this: AbstractForge, options: NamesOptions) {
-	if (this.settings.get('namesModel')?.provider === 'offline') {
+	const provider = this.settings.get('namesModel')?.provider;
+	if (provider === 'offline') {
 		return generateOfflineNames(options);
+	}
+	if (provider === 'adjective') {
+		return generateAdjectiveNames(options);
 	}
 	const namesModel = this.settings.get('namesModel');
 	if (!namesModel) return errAsync(new Error('No names model configured.'));

@@ -34,6 +34,11 @@ export const RPGM_MODELS = {
 		provider: 'offline',
 		slug: 'rpgm-names-offline'
 	},
+	adjectiveNames: {
+		type: 'text',
+		provider: 'adjective',
+		slug: 'rpgm-names-adjective'
+	},
 	descriptions: {
 		type: 'text',
 		provider: 'rpgm-tools',
