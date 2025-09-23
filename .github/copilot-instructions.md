@@ -40,3 +40,21 @@ Respond to prompts with concrete file references (e.g., tools/shared/src/tools.t
 Aaron / neostryder Preference Note (scoped): For Aaron only, assume streamlined commit workflow (auto-stage untracked, push-by-default) per root
 preferences section. For other contributors (Dallen `dallenb4`, Nate `jack-indaboks`, etc.) require explicit push/staging flags and favor safer
 verbose guidance.
+
+---
+
+### Comment & Documentation Update Directive (Tools Library)
+
+Every exported symbol or provider change MUST ship with updated JSDoc plus provenance references when domain rules apply (model slugs, quota,
+structured outputs, schema references).
+
+Key Requirements:
+
+- Public functions / classes: full JSDoc (purpose, params, returns, error/Result behavior, side‑effects). Mention caching, network calls, or quota.
+- Provider additions (`shared/src/tools.ts`): comment block including upstream baseURL intent, authentication expectations, and mapping strategy.
+- Generated client wrappers: DO NOT edit generated files; add wrapper with JSDoc referencing generation command + spec version.
+- Model slug changes: inline comment `// Ref: DR-<id> model slug addition` or reference change control file if purely additive.
+
+Follow the root global directive for formatting & checklist. Missing commentary → treat as blocking.
+
+Ref: root `/.github/copilot-instructions.md` Comment & Documentation Update Directive v1 (2025-09-22).
