@@ -4,7 +4,7 @@ const RECENT = [];
 const RECENT_LIMIT = 100;
 async function ensureLoaded() {
     if (!ADJECTIVES) {
-        // ADJECTIVES = (await import('@rpgm/forge/data/adjectives-list.json')).default.adjectives as string[];
+        ADJECTIVES = (await import('../../forge/data/adjectives-list.json')).default.adjectives;
     }
 }
 function pickUnique(count) {
