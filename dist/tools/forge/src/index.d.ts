@@ -3,7 +3,7 @@ import { ForgeQueue } from './queue';
 import { ResultAsync } from 'neverthrow';
 import { IRpgmModule, AbstractRpgmModule } from '../../../shared/src/module';
 import { TextModel, TextProvider } from '../../../shared/src/tools';
-export { default as HomebrewSchemas } from './data/schemas.json';
+export { default as HomebrewSchemas } from '../../forge/data/homebrew-schemas.json';
 export type * from './descriptions';
 export type * from './homebrew';
 export type * from './names';
@@ -24,6 +24,11 @@ export declare const RPGM_MODELS: {
         readonly type: "text";
         readonly provider: "offline";
         readonly slug: "rpgm-names-offline";
+    };
+    readonly adjectiveNames: {
+        readonly type: "text";
+        readonly provider: "adjective";
+        readonly slug: "rpgm-names-adjective";
     };
     readonly descriptions: {
         readonly type: "text";

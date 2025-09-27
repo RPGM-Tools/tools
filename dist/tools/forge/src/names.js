@@ -1,6 +1,7 @@
 import { err, errAsync, ok } from 'neverthrow';
 import { generateText } from 'ai';
 import { generateOfflineNames } from './offline-names';
+import { generateAdjectiveNames } from './adjective-names';
 function prompt(options) {
     let prompt = '';
     prompt += `Generate ${options.quantity} name(s) for a {${options.type}} in the {${options.genre}} genre.\n`;
@@ -10,8 +11,12 @@ function prompt(options) {
     return prompt;
 }
 export function generateNames(options) {
-    if (this.settings.get('namesModel')?.provider === 'offline') {
+    const provider = this.settings.get('namesModel')?.provider;
+    if (provider === 'offline') {
         return generateOfflineNames(options);
+    }
+    if (provider === 'adjective') {
+        return generateAdjectiveNames(options);
     }
     const namesModel = this.settings.get('namesModel');
     if (!namesModel)

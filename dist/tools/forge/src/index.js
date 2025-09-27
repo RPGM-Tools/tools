@@ -7,7 +7,7 @@ import { generateHomebrew } from './homebrew';
 import { generateNames } from './names';
 import { generateText } from 'ai';
 import { getApiForgeUsage } from '../../../shared/src/client';
-export { default as HomebrewSchemas } from './data/schemas.json';
+export { default as HomebrewSchemas } from '../../forge/data/homebrew-schemas.json';
 export const RPGM_MODELS = {
     names: {
         type: 'text',
@@ -18,6 +18,11 @@ export const RPGM_MODELS = {
         type: 'text',
         provider: 'offline',
         slug: 'rpgm-names-offline'
+    },
+    adjectiveNames: {
+        type: 'text',
+        provider: 'adjective',
+        slug: 'rpgm-names-adjective'
     },
     descriptions: {
         type: 'text',

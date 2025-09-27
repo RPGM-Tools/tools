@@ -122,6 +122,10 @@ export type GetApiUserInfoResponses = {
      * The user information
      */
     default: {
+        tier?: {
+            id?: string;
+            name?: string | null;
+        };
         sigils?: Array<{
             id?: string;
             name?: string;
