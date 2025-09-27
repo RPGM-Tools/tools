@@ -143,16 +143,16 @@ export type GetApiUserInfoResponses = {
      * The user information
      */
     default: {
-        tier?: {
-            id?: string;
-            name?: string | null;
+        tier: {
+            id: string;
+            name: string | null;
         };
-        sigils?: Array<{
-            id?: string;
-            name?: string;
-            description?: string;
-            imageUrl?: string;
-            aura?: string;
+        sigils: Array<{
+            id: string;
+            name: string;
+            description: string;
+            imageUrl: string;
+            aura: string;
         }>;
     };
 };
