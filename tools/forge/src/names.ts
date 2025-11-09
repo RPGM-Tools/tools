@@ -1,3 +1,8 @@
+/**
+ * File: names.ts
+ * Purpose: Build prompts and orchestrate name generation across online and offline providers.
+ * Last Updated: 2025-11-09
+ */
 import { err, errAsync, ok } from 'neverthrow';
 import type { AbstractForge } from '.';
 import { generateText } from 'ai';
@@ -7,24 +12,122 @@ import { generateAdjectiveNames } from './adjective-names';
 export type Gender = 'male' | 'female' | 'nonbinary' | 'any';
 
 export type NamesOptions = {
-	quantity: number
-	type: string
-	genre: string
-	gender: Gender
-	language: string
+	quantity: number;
+	type: string;
+	genre: string;
+	gender: Gender;
+	language: string;
 };
 
 export type Names = {
-	names: string[]
+	names: string[];
 };
 
-function prompt(options: NamesOptions): string {
-	let prompt = '';
-	prompt += `Generate ${options.quantity} name(s) for a {${options.type}} in the {${options.genre}} genre.\n`;
-	if (options.language) {
-		prompt += `Generate in the {${options.language}} language.`;
+type NamesData = {
+	types: { id: string; text: string }[];
+	names: {
+		type: string;
+		text: string;
+		gender: Gender;
+		weight: number;
+		position: 'first' | 'last';
+	}[];
+};
+
+let ADJECTIVES: string[] | null = null;
+let NAMES_DATA: NamesData | null = null;
+
+async function ensureDictionariesLoaded() {
+	if (!ADJECTIVES) {
+		ADJECTIVES = (await import('@rpgm/forge/data/adjectives-list.json')).default
+			.adjectives as string[];
 	}
-	return prompt;
+	if (!NAMES_DATA) {
+		NAMES_DATA = (await import('@rpgm/forge/data/names-list.json'))
+			.default as NamesData;
+	}
+}
+
+function pickRandomUnique<T>(source: T[], count: number) {
+	if (!source.length || count <= 0) return [] as T[];
+	const pool = [...source];
+	const result: T[] = [];
+	while (result.length < count && pool.length) {
+		const index = Math.floor(Math.random() * pool.length);
+		result.push(pool.splice(index, 1)[0]!);
+	}
+	return result;
+}
+
+function pickRandomAdjectives(count: number) {
+	if (!ADJECTIVES?.length) return [] as string[];
+	return pickRandomUnique(ADJECTIVES, Math.max(1, count));
+}
+
+function pickNameExamples(count: number) {
+	if (!NAMES_DATA?.names?.length) return [] as { type: string; name: string }[];
+	const comparable = NAMES_DATA.names.filter(n => n.position === 'first');
+	if (!comparable.length) return [];
+	const grouped = comparable.reduce<Record<string, string[]>>((acc, name) => {
+		(acc[name.type] ||= []).push(name.text);
+		return acc;
+	}, {});
+	const typeIds = Object.keys(grouped);
+	const pickedTypes = pickRandomUnique(
+		typeIds,
+		Math.min(typeIds.length, Math.max(1, count))
+	);
+	return pickedTypes.map(type => {
+		const pool = grouped[type]!;
+		return { type, name: pool[Math.floor(Math.random() * pool.length)] };
+	});
+}
+
+function buildSubjects(baseType: string, adjectives: string[]) {
+	const safeBase = baseType.trim() || 'creature';
+	if (!adjectives.length)
+		return [{ adjective: null as string | null, subject: safeBase }];
+	return adjectives.map(adj => ({
+		adjective: adj,
+		subject: `${adj} ${safeBase}`
+	}));
+}
+
+function buildInstruction(
+	options: NamesOptions,
+	adjectives: string[],
+	examples: { type: string; name: string }[]
+) {
+	const subjects = buildSubjects(options.type, adjectives);
+	return {
+		task: 'generate_names',
+		quantity: options.quantity,
+		genre: options.genre,
+		language: options.language || null,
+		gender: options.gender,
+		subjects: subjects.map(({ adjective, subject }) => ({
+			base: options.type,
+			descriptor: adjective,
+			subject
+		})),
+		examples: examples.map(example => ({
+			type: example.type,
+			name: example.name
+		})),
+		constraints: {
+			outputLines: options.quantity,
+			allowCharacters: ["'", '-'],
+			disallowExamples: examples.map(e => e.name)
+		}
+	};
+}
+
+function buildUserMessage(
+	options: NamesOptions,
+	instruction: ReturnType<typeof buildInstruction>
+) {
+	const payload = JSON.stringify(instruction, null, 2);
+	return `${payload}\n\nRespond with exactly ${options.quantity} unique name(s) in the same order as the subjects list. Output one name per line with no numbering, no bullets, and no additional commentary. Do not reuse example names or repeat the same leading word across different results.`;
 }
 
 export function generateNames(this: AbstractForge, options: NamesOptions) {
@@ -39,58 +142,80 @@ export function generateNames(this: AbstractForge, options: NamesOptions) {
 	if (!namesModel) return errAsync(new Error('No names model configured.'));
 	const model = this.tools.textAiFromModel.call(this.tools, namesModel);
 	if (model.isErr()) return errAsync(model.error);
-	return this.queue.generate(
-		async () => {
-			return generateText({
-				model: model.value,
-				maxRetries: 0,
-				messages: [
-					{
-						role: 'system',
-						content: DEV_PROMPT
-					},
-					{
-						role: 'user',
-						content: prompt(options)
-					}
-				],
-			}).then(({ text }) =>
-				Promise.resolve(text
-					.split('\n')
-					.map(s => s.trim())
-					.filter(Boolean)
-				).then(names => names.length ? ok({ names } as Names) : err(new Error('Failed to generate names.'))),
-				e => err(e instanceof Error ? e : new Error('Failed to generate names.')))
-		},
+	return this.queue.generate(async () => {
+		await ensureDictionariesLoaded();
+		const adjectives = pickRandomAdjectives(options.quantity);
+		const examples = pickNameExamples(
+			Math.min(4, Math.max(1, options.quantity))
+		);
+		const instruction = buildInstruction(options, adjectives, examples);
+		const userMessage = buildUserMessage(options, instruction);
+		return generateText({
+			model: model.value,
+			maxRetries: 0,
+			temperature: 0.9,
+			topP: 0.9,
+			presencePenalty: 0.7,
+			frequencyPenalty: 0.65,
+			seed: supportsSeed(model.value)
+				? Math.floor(Math.random() * 1_000_000_000)
+				: undefined,
+			messages: [
+				{
+					role: 'system',
+					content: DEV_PROMPT
+				},
+				{
+					role: 'user',
+					content: userMessage
+				}
+			]
+		}).then(
+			({ text }) =>
+				Promise.resolve(
+					text
+						.split('\n')
+						.map(s => s.trim())
+						.filter(Boolean)
+				).then(names =>
+					names.length
+						? ok({ names } as Names)
+						: err(new Error('Failed to generate names.'))
+				),
+			e => err(e instanceof Error ? e : new Error('Failed to generate names.'))
+		);
+	});
+}
+
+function supportsSeed(model: unknown) {
+	return (
+		typeof model === 'object' &&
+		model !== null &&
+		'providerId' in model &&
+		(model as { providerId: string }).providerId?.includes('openai')
 	);
 }
 
-const DEV_PROMPT = `
-You are NAMESMITH, a deterministic naming micro-service for fantasy settings.
+const DEV_PROMPT = `You are NAMESMITH, an autonomous naming micro-service for tabletop roleplaying games.
 
-When complying, follow EVERY rule below:
+Follow EVERY rule precisely:
 
-1. Carefully extract these parameters from the user prompt (these are always present unless otherwise noted):
-   • quantity: the exact number of unique names to generate.
-   • type: the subject or entity to be named (e.g. “goblin”, “dwarf barbarian”, “dragon clan”, “elven city”, “magical artifact”).
-   • genre: the genre of the setting (e.g. “high fantasy”, “sci-fi”, “prehistoric”).
-   • language: (optional; if specified, bias names to be pronounceable in the target language).
+1. The user supplies JSON instructions. Parse them literally. Fields include task, quantity, genre, language, gender, subjects (with descriptors), optional examples, and constraints.
+   • Ignore any fields that are null or absent.
+   • For each subject entry, create exactly one distinct name inspired by the descriptor + base.
+   • Use the provided genre, language, and gender cues to shape phonetics and tone.
 
-2. Output **exactly** the number of names specified by quantity (no more, no fewer).
+2. Output exactly \`constraints.outputLines\` names.
+   • Preserve the order of \`subjects\`.
+   • One name per line. No numbering, bullets, or blank lines.
+   • Only ASCII letters plus apostrophes (') or hyphens (-) when needed.
 
-3. Output one name per line, and nothing else.
-   • Do NOT include bullets, numbering, additional punctuation, formatting, or blank lines.
+3. Novelty requirements:
+   • Do NOT reuse any name listed in \`constraints.disallowExamples\`.
+   • Ensure each generated name has a different root or opening syllable from the others in this batch.
+   • Avoid obvious conjunctions of the same base word with minor suffix changes.
 
-4. Each generated name must adhere to the following rules:
-   a. Clearly reflect the requested genre (e.g. “high fantasy” should sound fantastical; “sci-fi” should evoke futurism).
-   b. Suit the specified type or subject (e.g. if type = “dragon clan”, names should feel like clan names).
-   c. If a language is provided, ensure names are pronounceable in that language.
-   d. Avoid any real-world trademarks, copyrighted names, or profanity.
-   e. Be unique from one another within this response.
-   f. Only use apostrophes (’) or hyphens (–) as internal punctuation; no other special characters.
-   g. NOT repeat the type/subject at the end unless explicitly instructed.
-   h. Each name must be as original and distinct as possible from well-known fantasy and real-world names, and from common prior responses. Favor unexpected combinations, rare syllables, or surprising motifs. Creativity and novelty are prioritized.
-   i. In each response, strive to avoid names that have appeared in previous outputs for similar prompts—even if not explicitly tracked. Prioritize creative novelty and avoid safe, obvious, or overused choices.
+4. The optional examples are inspiration only—never repeat them verbatim.
 
-6. Respond in plain UTF-8 text; do NOT apologize, explain, or add any commentary—just the names, one per line.
+5. No apologies, explanations, or commentary. Output the names only.
 `;
