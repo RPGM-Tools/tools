@@ -3,7 +3,7 @@
  * Purpose: IndexedDB persistence helpers for the CrystalCache module.
  * Updated: 2025-10-07
  */
-import type { CrystalCacheMutationRecord, CrystalRecord, JsonValue } from "./types";
+import type { CrystalCacheMutationRecord, CrystalRecord, JsonValue } from './types';
 export declare function openCacheDatabase(): Promise<IDBDatabase>;
 export declare function getCrystalRecord(db: IDBDatabase, id: string): Promise<CrystalRecord | undefined>;
 export declare function putCrystalRecord(db: IDBDatabase, record: CrystalRecord): Promise<void>;

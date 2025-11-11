@@ -3,20 +3,20 @@
  * Purpose: Lightweight JSON Patch helper tuned for the CrystalCache module.
  * Updated: 2025-10-07
  */
-import { CrystalCacheError } from "./errors";
+import { CrystalCacheError } from './errors';
 function toSegments(path) {
-    if (path === "") {
+    if (path === '') {
         return [];
     }
-    if (!path.startsWith("/")) {
+    if (!path.startsWith('/')) {
         throw new CrystalCacheError(`JSON Pointer must start with '/': ${path}`);
     }
-    const parts = path.split("/");
+    const parts = path.split('/');
     parts.shift();
-    return parts.map((segment) => segment.replace(/~1/g, "/").replace(/~0/g, "~"));
+    return parts.map(segment => segment.replace(/~1/g, '/').replace(/~0/g, '~'));
 }
 function clone(value) {
-    if (typeof structuredClone === "function") {
+    if (typeof structuredClone === 'function') {
         return structuredClone(value);
     }
     return JSON.parse(JSON.stringify(value));
@@ -28,14 +28,16 @@ function readPointer(root, segments) {
     let current = root;
     for (const segment of segments) {
         if (Array.isArray(current)) {
-            const index = segment === "-" ? current.length : Number(segment);
+            const index = segment === '-' ? current.length : Number(segment);
             if (!Number.isInteger(index) || index < 0 || index >= current.length) {
                 throw new CrystalCacheError(`JSON Pointer segment out of bounds: ${segment}`);
             }
             current = current[index];
             continue;
         }
-        if (typeof current === "object" && current !== null && segment in current) {
+        if (typeof current === 'object' &&
+            current !== null &&
+            segment in current) {
             current = current[segment];
             continue;
         }
@@ -55,7 +57,7 @@ export function applyJsonPatch(document, operations) {
     let working = clone(document);
     for (const operation of operations) {
         const segments = toSegments(operation.path);
-        if (operation.op === "test") {
+        if (operation.op === 'test') {
             const currentValue = readPointer(working, segments);
             const matches = JSON.stringify(currentValue) === JSON.stringify(operation.value);
             if (!matches) {
@@ -63,19 +65,23 @@ export function applyJsonPatch(document, operations) {
             }
             continue;
         }
-        if (operation.op === "remove") {
+        if (operation.op === 'remove') {
             const { container, key } = getContainer(working, segments);
             if (key === null) {
                 working = undefined;
             }
             else if (Array.isArray(container)) {
-                const index = key === "-" ? container.length - 1 : Number(key);
-                if (!Number.isInteger(index) || index < 0 || index >= container.length) {
+                const index = key === '-' ? container.length - 1 : Number(key);
+                if (!Number.isInteger(index) ||
+                    index < 0 ||
+                    index >= container.length) {
                     throw new CrystalCacheError(`JSON Patch remove index invalid at ${operation.path}`);
                 }
                 container.splice(index, 1);
             }
-            else if (typeof container === "object" && container !== null && key in container) {
+            else if (typeof container === 'object' &&
+                container !== null &&
+                key in container) {
                 delete container[key];
             }
             else {
@@ -83,7 +89,7 @@ export function applyJsonPatch(document, operations) {
             }
             continue;
         }
-        if (operation.op === "add" || operation.op === "replace") {
+        if (operation.op === 'add' || operation.op === 'replace') {
             const { container, key } = getContainer(working, segments);
             const valueClone = clone(operation.value);
             if (key === null) {
@@ -91,14 +97,14 @@ export function applyJsonPatch(document, operations) {
                 continue;
             }
             if (Array.isArray(container)) {
-                const index = key === "-" ? container.length : Number(key);
+                const index = key === '-' ? container.length : Number(key);
                 if (!Number.isInteger(index) || index < 0 || index > container.length) {
                     throw new CrystalCacheError(`JSON Patch array index invalid at ${operation.path}`);
                 }
-                if (operation.op === "replace" && index === container.length) {
+                if (operation.op === 'replace' && index === container.length) {
                     throw new CrystalCacheError(`JSON Patch replace requires existing index at ${operation.path}`);
                 }
-                if (operation.op === "replace") {
+                if (operation.op === 'replace') {
                     container[index] = valueClone;
                 }
                 else {
@@ -106,7 +112,7 @@ export function applyJsonPatch(document, operations) {
                 }
                 continue;
             }
-            if (typeof container === "object" && container !== null) {
+            if (typeof container === 'object' && container !== null) {
                 container[key] = valueClone;
                 continue;
             }

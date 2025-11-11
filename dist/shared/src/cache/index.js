@@ -3,19 +3,20 @@
  * Purpose: CrystalCache implementation for tools/shared, providing local IndexedDB storage and sync scaffolding.
  * Updated: 2025-10-07
  */
-import { configureCrystalCache, createInMemoryCacheSettings, registerCrystalCacheSettings, resolveConfiguration } from "./config";
-import { applyJsonPatch } from "./json-patch";
-import { decryptCrystal, deriveEncryptionKey, encryptCrystal, generateSalt } from "./crypto";
-import { addMutationRecord, deleteCrystalRecord, getCrystalRecord, listCrystalRecords, listMutationRecords, openCacheDatabase, putCrystalRecord, readMetadata, upsertMetadata } from "./db";
-import { validateLoreCrystal } from "./validation";
-import { base64ToBytes, bytesToBase64, deepClone, safeRandomId } from "./utils";
-import { CrystalCacheCryptoUnavailableError, CrystalCacheLockedError, CrystalCacheValidationError } from "./errors";
-const DEVICE_SALT_KEY = "deviceSalt";
-const SCHEMA_VERSION_KEY = "schemaVersion";
+import { configureCrystalCache, createInMemoryCacheSettings, registerCrystalCacheSettings, resolveConfiguration } from './config';
+import { applyJsonPatch } from './json-patch';
+import { decryptCrystal, deriveEncryptionKey, encryptCrystal, generateSalt } from './crypto';
+import { addMutationRecord, deleteCrystalRecord, getCrystalRecord, listCrystalRecords, listMutationRecords, openCacheDatabase, putCrystalRecord, readMetadata, upsertMetadata } from './db';
+import { validateLoreCrystal } from './validation';
+import { base64ToBytes, bytesToBase64, deepClone, safeRandomId } from './utils';
+import { CrystalCacheCryptoUnavailableError, CrystalCacheLockedError, CrystalCacheValidationError } from './errors';
+const DEVICE_SALT_KEY = 'deviceSalt';
+const SCHEMA_VERSION_KEY = 'schemaVersion';
 const CURRENT_SCHEMA_VERSION = 1;
 function decidePlaintextMode(auth, config, options) {
     const plaintextEligible = config.plaintextAllowed && !auth.publicDevice;
-    const forcePlaintext = plaintextEligible && (auth.plaintextDebug === true || options?.plaintextFallback === true);
+    const forcePlaintext = plaintextEligible &&
+        (auth.plaintextDebug === true || options?.plaintextFallback === true);
     return {
         allowPlaintext: plaintextEligible,
         forcePlaintext
@@ -23,7 +24,7 @@ function decidePlaintextMode(auth, config, options) {
 }
 async function ensureDeviceSalt(db) {
     const cachedSalt = await readMetadata(db, DEVICE_SALT_KEY);
-    if (typeof cachedSalt === "string" && cachedSalt.length > 0) {
+    if (typeof cachedSalt === 'string' && cachedSalt.length > 0) {
         return base64ToBytes(cachedSalt);
     }
     const salt = generateSalt();
@@ -32,7 +33,7 @@ async function ensureDeviceSalt(db) {
 }
 async function ensureSchemaVersion(db) {
     const current = await readMetadata(db, SCHEMA_VERSION_KEY);
-    if (typeof current !== "number" || current !== CURRENT_SCHEMA_VERSION) {
+    if (typeof current !== 'number' || current !== CURRENT_SCHEMA_VERSION) {
         await upsertMetadata(db, SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
     }
 }
@@ -49,18 +50,18 @@ function scheduleIdleLock(state, lock) {
         clearTimeout(state.idleTimer);
     }
     state.idleTimer = setTimeout(() => {
-        void lock("idle-timeout");
+        void lock('idle-timeout');
     }, state.config.idleTimeoutMs);
 }
 function attachLifecycleHooks(state, lock) {
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
         return;
     }
     const onBeforeUnload = () => {
-        void lock("beforeunload");
+        void lock('beforeunload');
     };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    state.detachHooks.push(() => window.removeEventListener("beforeunload", onBeforeUnload));
+    window.addEventListener('beforeunload', onBeforeUnload);
+    state.detachHooks.push(() => window.removeEventListener('beforeunload', onBeforeUnload));
 }
 async function deriveStatefulKey(state, options) {
     const { allowPlaintext, forcePlaintext } = decidePlaintextMode(state.auth, state.config, options);
@@ -69,25 +70,27 @@ async function deriveStatefulKey(state, options) {
         return await deriveEncryptionKey(state.auth.encryptionSecret, salt, forcePlaintext);
     }
     catch (error) {
-        if (!forcePlaintext && allowPlaintext && error instanceof CrystalCacheCryptoUnavailableError) {
-            state.config.logger.warn("Web Crypto unavailable, downgrading CrystalCache to plaintext mode.", {
+        if (!forcePlaintext &&
+            allowPlaintext &&
+            error instanceof CrystalCacheCryptoUnavailableError) {
+            state.config.logger.warn('Web Crypto unavailable, downgrading CrystalCache to plaintext mode.', {
                 userId: state.auth.userId,
                 deviceId: state.auth.deviceId
             });
-            return { key: null, mode: "plaintext" };
+            return { key: null, mode: 'plaintext' };
         }
         throw error;
     }
 }
 async function materializeCrystal(record, state) {
-    if (record.mode === "plaintext" || state.mode === "plaintext" || !state.key) {
+    if (record.mode === 'plaintext' || state.mode === 'plaintext' || !state.key) {
         if (!record.plaintext) {
-            throw new CrystalCacheValidationError("Plaintext record missing payload.", []);
+            throw new CrystalCacheValidationError('Plaintext record missing payload.', []);
         }
         return deepClone(record.plaintext);
     }
     if (!record.ciphertext || !record.iv || !state.key) {
-        throw new CrystalCacheValidationError("Encrypted record missing cipher material.", []);
+        throw new CrystalCacheValidationError('Encrypted record missing cipher material.', []);
     }
     const envelope = {
         ciphertext: record.ciphertext,
@@ -99,7 +102,7 @@ async function materializeCrystal(record, state) {
 async function persistCrystal(state, payload, existing) {
     const validation = validateLoreCrystal(payload);
     if (!validation.valid) {
-        throw new CrystalCacheValidationError("Lore Crystal failed validation.", validation.issues);
+        throw new CrystalCacheValidationError('Lore Crystal failed validation.', validation.issues);
     }
     const nowRecord = {
         id: payload.id,
@@ -107,7 +110,7 @@ async function persistCrystal(state, payload, existing) {
         updatedAt: payload.updated_at,
         mode: state.mode
     };
-    if (state.mode === "plaintext" || !state.key) {
+    if (state.mode === 'plaintext' || !state.key) {
         nowRecord.plaintext = deepClone(payload);
     }
     else {
@@ -118,7 +121,7 @@ async function persistCrystal(state, payload, existing) {
     await putCrystalRecord(state.db, nowRecord);
 }
 async function queueMutationRecord(state, input) {
-    const mutationId = safeRandomId("mutation");
+    const mutationId = safeRandomId('mutation');
     const record = {
         mutationId,
         crystalId: input.crystalId,
@@ -127,7 +130,7 @@ async function queueMutationRecord(state, input) {
         userId: state.auth.userId,
         deviceId: state.auth.deviceId,
         note: input.note,
-        state: "queued"
+        state: 'queued'
     };
     await addMutationRecord(state.db, record);
     return mutationId;
@@ -152,7 +155,7 @@ async function createCrystalCache(authContext, options) {
         config,
         auth: authContext,
         key: null,
-        mode: "encrypted",
+        mode: 'encrypted',
         locked: false,
         idleTimer: null,
         detachHooks: []
@@ -164,7 +167,7 @@ async function createCrystalCache(authContext, options) {
         if (state.locked) {
             return;
         }
-        state.config.logger.log("CrystalCache locked.", {
+        state.config.logger.log('CrystalCache locked.', {
             reason,
             userId: state.auth.userId,
             deviceId: state.auth.deviceId
@@ -182,21 +185,21 @@ async function createCrystalCache(authContext, options) {
         state.key = result.key;
         state.mode = result.mode;
         state.locked = false;
-        recordAccess(state, (reason) => {
+        recordAccess(state, reason => {
             void lock(reason);
         });
     };
-    attachLifecycleHooks(state, (reason) => {
+    attachLifecycleHooks(state, reason => {
         void lock(reason);
     });
-    recordAccess(state, (reason) => {
+    recordAccess(state, reason => {
         void lock(reason);
     });
     const api = {
         async get(id) {
             ensureUnlocked(state);
             const record = await getCrystalRecord(state.db, id);
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
             if (!record) {
@@ -207,10 +210,10 @@ async function createCrystalCache(authContext, options) {
         async list() {
             ensureUnlocked(state);
             const records = await listCrystalRecords(state.db);
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
-            const crystals = await Promise.all(records.map((record) => materializeCrystal(record, state)));
+            const crystals = await Promise.all(records.map(record => materializeCrystal(record, state)));
             return crystals.sort((a, b) => {
                 if (a.updated_at === b.updated_at) {
                     return 0;
@@ -222,7 +225,7 @@ async function createCrystalCache(authContext, options) {
             ensureUnlocked(state);
             const existing = await getCrystalRecord(state.db, crystal.id);
             await persistCrystal(state, crystal, existing);
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
         },
@@ -237,7 +240,7 @@ async function createCrystalCache(authContext, options) {
             updated.updated_at = new Date().toISOString();
             await persistCrystal(state, updated, record);
             await queueMutationRecord(state, { crystalId: id, operations });
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
             return updated;
@@ -247,16 +250,16 @@ async function createCrystalCache(authContext, options) {
             await deleteCrystalRecord(state.db, id);
             await queueMutationRecord(state, {
                 crystalId: id,
-                operations: [{ op: "remove", path: "" }]
+                operations: [{ op: 'remove', path: '' }]
             });
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
         },
         async queueMutation(input) {
             ensureUnlocked(state);
             const id = await queueMutationRecord(state, input);
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
             return id;
@@ -264,12 +267,12 @@ async function createCrystalCache(authContext, options) {
         async flushMutations() {
             ensureUnlocked(state);
             const mutations = await listMutationRecords(state.db);
-            state.config.logger.log("CrystalCache flush stub invoked.", {
+            state.config.logger.log('CrystalCache flush stub invoked.', {
                 queued: mutations.length,
                 userId: state.auth.userId,
                 deviceId: state.auth.deviceId
             });
-            recordAccess(state, (reason) => {
+            recordAccess(state, reason => {
                 void lock(reason);
             });
             return mutations;
@@ -294,13 +297,13 @@ async function createCrystalCache(authContext, options) {
             };
         },
         async lock(reason) {
-            await lock(reason ?? "manual");
+            await lock(reason ?? 'manual');
         },
         async unlock(freshAuth) {
             await unlock(freshAuth);
         },
         async close() {
-            await lock("close");
+            await lock('close');
             detachHooks(state);
             state.db.close();
         },

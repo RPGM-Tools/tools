@@ -3,9 +3,9 @@
  * Purpose: Shared type definitions for the CrystalCache module in tools/shared.
  * Updated: 2025-10-07
  */
-import type { RpgmLogger } from "../logger";
-import type { SettingsMap } from "../settings";
-export type CrystalCacheLogger = Pick<RpgmLogger, "log" | "warn" | "error">;
+import type { RpgmLogger } from '../logger';
+import type { SettingsMap } from '../settings';
+export type CrystalCacheLogger = Pick<RpgmLogger, 'log' | 'warn' | 'error'>;
 export interface CacheSettings {
     idleTimeoutMs: number;
     plaintextAllowed: boolean;
@@ -57,7 +57,7 @@ export interface CrystalCacheMutationRecord {
     userId: string;
     deviceId: string;
     note?: string;
-    state: "queued" | "sent";
+    state: 'queued' | 'sent';
 }
 export interface ValidationIssue {
     path: string;
@@ -93,7 +93,7 @@ export interface CrystalRecord {
     plaintext?: LoreCrystal;
     createdAt: string;
     updatedAt: string;
-    mode: "encrypted" | "plaintext";
+    mode: 'encrypted' | 'plaintext';
 }
 export interface MetadataRecord {
     key: string;
@@ -105,14 +105,14 @@ export interface CryptoEnvelope {
 }
 export interface DeriveKeyResult {
     key: CryptoKey | null;
-    mode: "encrypted" | "plaintext";
+    mode: 'encrypted' | 'plaintext';
 }
 export interface LifecycleHooks {
     attach(): void;
     release(): void;
 }
 export interface JsonPatchOperation {
-    op: "add" | "remove" | "replace" | "test";
+    op: 'add' | 'remove' | 'replace' | 'test';
     path: string;
     value?: JsonValue;
 }

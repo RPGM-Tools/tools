@@ -3,7 +3,7 @@
  * Purpose: Manage CrystalCache global configuration using shared logger and settings abstractions.
  * Updated: 2025-10-07
  */
-import { RpgmLogger } from "../logger";
+import { RpgmLogger } from '../logger';
 const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const defaultSettings = {
     idleTimeoutMs: DEFAULT_IDLE_TIMEOUT_MS,
@@ -17,7 +17,9 @@ class InMemorySettingsMap {
         }
     }
     get(key) {
-        return this.store.has(key) ? this.store.get(key) : undefined;
+        return this.store.has(key)
+            ? this.store.get(key)
+            : undefined;
     }
     set(key, value) {
         this.store.set(key, value);
@@ -25,7 +27,7 @@ class InMemorySettingsMap {
     }
 }
 let settingsStore = new InMemorySettingsMap(defaultSettings);
-let activeLogger = new RpgmLogger("CrystalCache | ");
+let activeLogger = new RpgmLogger('CrystalCache | ');
 function seedDefaults(map, overrides) {
     const seed = {
         ...defaultSettings,
@@ -55,21 +57,23 @@ export function configureCrystalCache(options = {}) {
             plaintextAllowed: options.plaintextAllowed
         });
     }
-    if (typeof options.idleTimeoutMs === "number") {
-        settingsStore.set("idleTimeoutMs", options.idleTimeoutMs);
+    if (typeof options.idleTimeoutMs === 'number') {
+        settingsStore.set('idleTimeoutMs', options.idleTimeoutMs);
     }
-    if (typeof options.plaintextAllowed === "boolean") {
-        settingsStore.set("plaintextAllowed", options.plaintextAllowed);
+    if (typeof options.plaintextAllowed === 'boolean') {
+        settingsStore.set('plaintextAllowed', options.plaintextAllowed);
     }
     if (options.logger) {
         activeLogger = options.logger;
     }
 }
 export function resolveConfiguration(options) {
-    const idleSetting = settingsStore.get("idleTimeoutMs");
+    const idleSetting = settingsStore.get('idleTimeoutMs');
     const idleTimeoutMs = options?.idleTimeoutMs ?? idleSetting ?? defaultSettings.idleTimeoutMs;
-    const plaintextSetting = settingsStore.get("plaintextAllowed");
-    const plaintextAllowed = typeof plaintextSetting === "boolean" ? plaintextSetting : defaultSettings.plaintextAllowed;
+    const plaintextSetting = settingsStore.get('plaintextAllowed');
+    const plaintextAllowed = typeof plaintextSetting === 'boolean'
+        ? plaintextSetting
+        : defaultSettings.plaintextAllowed;
     const logger = options?.logger ?? activeLogger;
     return {
         idleTimeoutMs,

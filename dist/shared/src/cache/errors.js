@@ -6,26 +6,26 @@
 export class CrystalCacheError extends Error {
     constructor(message) {
         super(message);
-        this.name = "CrystalCacheError";
+        this.name = 'CrystalCacheError';
     }
 }
 export class CrystalCacheLockedError extends CrystalCacheError {
     constructor() {
-        super("CrystalCache is locked. Call unlock() with fresh credentials before accessing data.");
-        this.name = "CrystalCacheLockedError";
+        super('CrystalCache is locked. Call unlock() with fresh credentials before accessing data.');
+        this.name = 'CrystalCacheLockedError';
     }
 }
 export class CrystalCacheValidationError extends CrystalCacheError {
     issues;
     constructor(message, issues) {
         super(message);
-        this.name = "CrystalCacheValidationError";
+        this.name = 'CrystalCacheValidationError';
         this.issues = issues;
     }
 }
 export class CrystalCacheCryptoUnavailableError extends CrystalCacheError {
     constructor() {
-        super("Web Crypto API is unavailable. Encryption mode cannot be enabled in this environment.");
-        this.name = "CrystalCacheCryptoUnavailableError";
+        super('Web Crypto API is unavailable. Encryption mode cannot be enabled in this environment.');
+        this.name = 'CrystalCacheCryptoUnavailableError';
     }
 }

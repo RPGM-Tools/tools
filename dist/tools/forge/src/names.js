@@ -1,7 +1,7 @@
 /**
  * File: names.ts
  * Purpose: Build prompts and orchestrate name generation across online and offline providers.
- * Last Updated: 2025-11-09
+ * Last Updated: 2025-11-10
  */
 import { err, errAsync, ok } from 'neverthrow';
 import { generateText } from 'ai';
@@ -11,10 +11,12 @@ let ADJECTIVES = null;
 let NAMES_DATA = null;
 async function ensureDictionariesLoaded() {
     if (!ADJECTIVES) {
-        ADJECTIVES = (await import('../../forge/data/adjectives-list.json')).default.adjectives;
+        ADJECTIVES = (await import('../../forge/data/adjectives-list.json')).default
+            .adjectives;
     }
     if (!NAMES_DATA) {
-        NAMES_DATA = (await import('../../forge/data/names-list.json')).default;
+        NAMES_DATA = (await import('../../forge/data/names-list.json'))
+            .default;
     }
 }
 function pickRandomUnique(source, count) {
@@ -54,7 +56,10 @@ function buildSubjects(baseType, adjectives) {
     const safeBase = baseType.trim() || 'creature';
     if (!adjectives.length)
         return [{ adjective: null, subject: safeBase }];
-    return adjectives.map(adj => ({ adjective: adj, subject: `${adj} ${safeBase}` }));
+    return adjectives.map(adj => ({
+        adjective: adj,
+        subject: `${adj} ${safeBase}`
+    }));
 }
 function buildInstruction(options, adjectives, examples) {
     const subjects = buildSubjects(options.type, adjectives);
@@ -111,7 +116,6 @@ export function generateNames(options) {
             topP: 0.9,
             presencePenalty: 0.7,
             frequencyPenalty: 0.65,
-            seed: supportsSeed(model.value) ? Math.floor(Math.random() * 1_000_000_000) : undefined,
             messages: [
                 {
                     role: 'system',
@@ -121,15 +125,14 @@ export function generateNames(options) {
                     role: 'user',
                     content: userMessage
                 }
-            ],
+            ]
         }).then(({ text }) => Promise.resolve(text
             .split('\n')
             .map(s => s.trim())
-            .filter(Boolean)).then(names => names.length ? ok({ names }) : err(new Error('Failed to generate names.'))), e => err(e instanceof Error ? e : new Error('Failed to generate names.')));
+            .filter(Boolean)).then(names => names.length
+            ? ok({ names })
+            : err(new Error('Failed to generate names.'))), e => err(e instanceof Error ? e : new Error('Failed to generate names.')));
     });
-}
-function supportsSeed(model) {
-    return typeof model === 'object' && model !== null && 'providerId' in model && model.providerId?.includes('openai');
 }
 const DEV_PROMPT = `You are NAMESMITH, an autonomous naming micro-service for tabletop roleplaying games.
 
