@@ -12,7 +12,7 @@
 		"./client": "./dist/shared/src/client/index.js",
 		".": "./dist/shared/src/index.js"
 	},
-	"packageManager": "pnpm@12.15.0",
+	"packageManager": "pnpm@12.16.1",
 	"author": "dallenb4",
 	"license": "MIT",
 	"devDependencies": {
