@@ -38,7 +38,7 @@
 		"zod": "^4.6.7"
 	},
 	"dependencies": {
-		"@ai-sdk/openai": "^2.0.23",
+		"@ai-sdk/openai": "^4.0.109",
 		"@ai-sdk/openai-compatible": "^1.0.13",
 		"@openrouter/ai-sdk-provider": "^1.1.2",
 		"ai": "^5.0.27",
