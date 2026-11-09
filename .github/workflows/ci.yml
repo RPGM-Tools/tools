@@ -22,4 +22,6 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+        env:
+          npm_config_strict_dep_builds: "false"
       - run: pnpm run build
