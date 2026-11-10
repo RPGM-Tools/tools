@@ -39,7 +39,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/openai": "^4.0.110",
-		"@ai-sdk/openai-compatible": "^1.0.13",
+		"@ai-sdk/openai-compatible": "^3.0.86",
 		"@openrouter/ai-sdk-provider": "^1.1.2",
 		"ai": "^5.0.27",
 		"ajv": "^8.20.0",
