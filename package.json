@@ -16,7 +16,7 @@
 	"author": "dallenb4",
 	"license": "MIT",
 	"devDependencies": {
-		"@ai-sdk/provider": "^2.0.0",
+		"@ai-sdk/provider": "^4.0.37",
 		"@eslint/js": "^10.0.1",
 		"@hey-api/openapi-ts": "0.99.0",
 		"@stylistic/eslint-plugin": "^5.10.0",
