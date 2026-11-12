@@ -21,7 +21,7 @@
 		"@hey-api/openapi-ts": "0.99.0",
 		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/node": "^26.6.6",
-		"dotenv": "^18.0.9",
+		"dotenv": "^18.0.10",
 		"eslint": "^10.14.0",
 		"eslint-plugin-jsdoc": "^65.4.5",
 		"eslint-plugin-simple-import-sort": "^14.0.0",
